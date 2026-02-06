@@ -3,44 +3,83 @@ import ProcessBar from "./ProcessBar";
 import NotificationCard from "./NotificationCard";
 import StatsLegend from "./StatsLegend";
 import { ChevronRight, Building2, Users } from "lucide-react";
-
-// Mock data
-const fiscalData = {
-  ok: 36,
-  pending: 48,
-  attention: 4,
-};
-
-const processData = [
-  { label: "PGDAS", ok: 80, warning: 15, danger: 5 },
-  { label: "PGMEI", ok: 70, warning: 20, danger: 10 },
-  { label: "DCTFWeb", ok: 60, warning: 30, danger: 10 },
-  { label: "Parcelamento", ok: 50, warning: 35, danger: 15 },
-  { label: "Certidões", ok: 75, warning: 15, danger: 10 },
-  { label: "Caixas Postais", ok: 65, warning: 25, danger: 10 },
-  { label: "Declarações", ok: 55, warning: 30, danger: 15 },
-];
-
-const notifications = [
-  { company: "AUTO CENTER SA", message: "Pagamento detectado - DAS Simples", type: "success" as const },
-  { company: "AUTO CENTER SA", message: "Pagamento detectado - DAS Simples", type: "success" as const },
-  { company: "VERÍSSIMO ALVES LTDA", message: "Nova pendência - DCTFWeb", type: "danger" as const },
-  { company: "TECH SOLUTIONS ME", message: "CND Federal expirando em 15 dias", type: "warning" as const },
-];
-
-const absenceData = [
-  { label: "Declarações gerais", missing: 12, total: 123 },
-  { label: "Declarações SPEDs", missing: 12, total: 123 },
-];
+import { useFGTSStats } from "@/hooks/useFGTSRecords";
+import { useCertificateStats } from "@/hooks/useCertificates";
+import { useDeclarationStats } from "@/hooks/useDeclarations";
+import { useInstallmentStats } from "@/hooks/useInstallments";
+import { useSimplesLimits } from "@/hooks/useSimplesLimits";
+import { useClients } from "@/hooks/useClients";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardContent = () => {
+  const { data: fgtsStats, isLoading: loadingFGTS } = useFGTSStats();
+  const { data: certStats, isLoading: loadingCerts } = useCertificateStats();
+  const { data: declStats, isLoading: loadingDecl } = useDeclarationStats();
+  const { data: instStats, isLoading: loadingInst } = useInstallmentStats();
+  const { data: simplesLimits, isLoading: loadingSimples } = useSimplesLimits({ year: new Date().getFullYear() });
+  const { data: clients } = useClients();
+
+  const isLoading = loadingFGTS || loadingCerts || loadingDecl || loadingInst;
+
+  // Aggregate stats
+  const totalOk = (fgtsStats?.ok || 0) + (certStats?.ok || 0) + (declStats?.ok || 0) + (instStats?.ok || 0);
+  const totalPending = (fgtsStats?.pending || 0) + (certStats?.pending || 0) + (declStats?.pending || 0) + (instStats?.pending || 0);
+  const totalAttention = (fgtsStats?.attention || 0) + (certStats?.attention || 0) + (declStats?.attention || 0) + (instStats?.attention || 0);
+  const totalExpired = (fgtsStats?.expired || 0) + (certStats?.expired || 0) + (declStats?.expired || 0) + (instStats?.expired || 0);
+
   const chartData = [
-    { name: "Em dia", value: fiscalData.ok, color: "hsl(142, 71%, 45%)" },
-    { name: "Pendências", value: fiscalData.pending, color: "hsl(38, 92%, 50%)" },
-    { name: "Atenção", value: fiscalData.attention, color: "hsl(0, 84%, 60%)" },
+    { name: "Em dia", value: totalOk, color: "hsl(142, 71%, 45%)" },
+    { name: "Pendências", value: totalPending + totalAttention, color: "hsl(38, 92%, 50%)" },
+    { name: "Vencidos", value: totalExpired, color: "hsl(0, 84%, 60%)" },
   ];
 
-  const total = fiscalData.ok + fiscalData.pending + fiscalData.attention;
+  const total = totalOk + totalPending + totalAttention + totalExpired;
+
+  const processData = [
+    { 
+      label: "FGTS Digital", 
+      ok: fgtsStats?.ok || 0, 
+      warning: (fgtsStats?.pending || 0) + (fgtsStats?.attention || 0), 
+      danger: fgtsStats?.expired || 0 
+    },
+    { 
+      label: "Certidões", 
+      ok: certStats?.ok || 0, 
+      warning: (certStats?.pending || 0) + (certStats?.attention || 0), 
+      danger: certStats?.expired || 0 
+    },
+    { 
+      label: "Declarações", 
+      ok: declStats?.ok || 0, 
+      warning: (declStats?.pending || 0) + (declStats?.attention || 0), 
+      danger: declStats?.expired || 0 
+    },
+    { 
+      label: "Parcelamentos", 
+      ok: instStats?.ok || 0, 
+      warning: (instStats?.pending || 0) + (instStats?.attention || 0), 
+      danger: instStats?.expired || 0 
+    },
+  ];
+
+  // Get top 5 simples limits by percentage used
+  const topSimplesLimits = simplesLimits?.slice(0, 5) || [];
+
+  const absenceData = [
+    { label: "Declarações pendentes", missing: declStats?.pending || 0, total: declStats?.total || 0 },
+    { label: "Certidões vencidas", missing: certStats?.expired || 0, total: certStats?.total || 0 },
+  ];
+
+  const notifications: { company: string; message: string; type: "success" | "warning" | "danger" }[] = [
+    ...(fgtsStats?.expired && fgtsStats.expired > 0 ? [{ company: "FGTS Digital", message: `${fgtsStats.expired} guia(s) vencida(s)`, type: "danger" as const }] : []),
+    ...(certStats?.expired && certStats.expired > 0 ? [{ company: "Certidões", message: `${certStats.expired} certidão(ões) vencida(s)`, type: "danger" as const }] : []),
+    ...(declStats?.attention && declStats.attention > 0 ? [{ company: "Declarações", message: `${declStats.attention} declaração(ões) com atenção`, type: "warning" as const }] : []),
+    ...(instStats?.attention && instStats.attention > 0 ? [{ company: "Parcelamentos", message: `${instStats.attention} parcelamento(s) com atenção`, type: "warning" as const }] : []),
+  ];
+
+  if (notifications.length === 0) {
+    notifications.push({ company: "Sistema", message: "Nenhuma pendência urgente", type: "success" });
+  }
 
   return (
     <div className="flex-1 overflow-auto p-6">
@@ -60,36 +99,48 @@ const DashboardContent = () => {
               {/* Donut Chart */}
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Geral</h3>
-                <div className="flex items-center gap-6">
-                  <div className="w-40 h-40">
-                    <DonutChart
-                      data={chartData}
-                      centerValue={total}
-                      centerLabel="Total"
+                {isLoading ? (
+                  <Skeleton className="w-40 h-40" />
+                ) : (
+                  <div className="flex items-center gap-6">
+                    <div className="w-40 h-40">
+                      <DonutChart
+                        data={chartData}
+                        centerValue={total}
+                        centerLabel="Total"
+                      />
+                    </div>
+                    <StatsLegend
+                      okCount={totalOk}
+                      warningCount={totalPending + totalAttention}
+                      dangerCount={totalExpired}
                     />
                   </div>
-                  <StatsLegend
-                    okCount={fiscalData.ok}
-                    warningCount={fiscalData.pending}
-                    dangerCount={fiscalData.attention}
-                  />
-                </div>
+                )}
               </div>
 
               {/* Process Bars */}
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Por processo</h3>
-                <div className="space-y-2">
-                  {processData.map((process) => (
-                    <ProcessBar
-                      key={process.label}
-                      label={process.label}
-                      okCount={process.ok}
-                      warningCount={process.warning}
-                      dangerCount={process.danger}
-                    />
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton key={i} className="h-8 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {processData.map((process) => (
+                      <ProcessBar
+                        key={process.label}
+                        label={process.label}
+                        okCount={process.ok}
+                        warningCount={process.warning}
+                        dangerCount={process.danger}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -100,7 +151,7 @@ const DashboardContent = () => {
               <div>
                 <h3 className="text-base font-medium text-foreground">Sublimites do Simples</h3>
                 <p className="text-sm text-muted-foreground">
-                  Acompanhe os sublimites R$112 dos seus 10 maiores clientes.
+                  Acompanhe os sublimites dos seus clientes no Simples Nacional.
                 </p>
               </div>
               <button className="text-primary text-sm font-medium flex items-center gap-1 hover:underline">
@@ -109,22 +160,40 @@ const DashboardContent = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2">
-                    <DonutChart
-                      data={[
-                        { name: "Usado", value: 65 + i * 5, color: i > 3 ? "hsl(38, 92%, 50%)" : "hsl(142, 71%, 45%)" },
-                        { name: "Livre", value: 35 - i * 5, color: "hsl(217, 33%, 17%)" },
-                      ]}
-                      centerValue={`${65 + i * 5}%`}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">Cliente {i}</p>
-                </div>
-              ))}
-            </div>
+            {loadingSimples ? (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-24 w-full" />
+                ))}
+              </div>
+            ) : topSimplesLimits.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {topSimplesLimits.map((limit, i) => {
+                  const percentage = limit.percentage_used || 0;
+                  const color = percentage >= 100 ? "hsl(0, 84%, 60%)" : percentage >= 80 ? "hsl(38, 92%, 50%)" : "hsl(142, 71%, 45%)";
+                  return (
+                    <div key={limit.id} className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-2">
+                        <DonutChart
+                          data={[
+                            { name: "Usado", value: Math.min(percentage, 100), color },
+                            { name: "Livre", value: Math.max(100 - percentage, 0), color: "hsl(217, 33%, 17%)" },
+                          ]}
+                          centerValue={`${Math.round(percentage)}%`}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {limit.clients?.company_name || `Cliente ${i + 1}`}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                Nenhum sublimite cadastrado. Adicione clientes do Simples Nacional.
+              </p>
+            )}
           </div>
         </div>
 
@@ -156,9 +225,9 @@ const DashboardContent = () => {
           {/* Absence of Declarations */}
           <div className="glass-card p-6">
             <div className="mb-4">
-              <h3 className="text-base font-medium text-foreground">Ausência de Declarações</h3>
+              <h3 className="text-base font-medium text-foreground">Resumo de Pendências</h3>
               <p className="text-xs text-muted-foreground">
-                Monitore as declarações e veja as ausências.
+                Monitore as pendências gerais do sistema.
               </p>
             </div>
 
@@ -182,6 +251,15 @@ const DashboardContent = () => {
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="glass-card p-6">
+            <h3 className="text-base font-medium text-foreground mb-4">Clientes Ativos</h3>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-primary">{clients?.length || 0}</p>
+              <p className="text-sm text-muted-foreground mt-1">empresas cadastradas</p>
             </div>
           </div>
         </div>

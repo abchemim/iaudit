@@ -18,7 +18,8 @@ interface DashboardHeaderProps {
 const tabTitles: Record<string, string> = {
   dashboard: "Dashboard",
   clientes: "Clientes",
-  simples: "Simples Nacional | MEI",
+  declaracoes: "Declarações Fiscais",
+  simples: "Sublimites do Simples Nacional",
   dctfweb: "DCTFWeb",
   fgts: "FGTS Digital",
   parcelamentos: "Parcelamentos",
