@@ -4,6 +4,8 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import FGTSContent from "@/components/fgts/FGTSContent";
 import CertificatesContent from "@/components/certificates/CertificatesContent";
+import ClientsContent from "@/components/clients/ClientsContent";
+import DeclarationsContent from "@/components/declarations/DeclarationsContent";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -16,6 +18,10 @@ const Dashboard = () => {
         return <FGTSContent />;
       case "certidoes":
         return <CertificatesContent />;
+      case "clientes":
+        return <ClientsContent />;
+      case "declaracoes":
+        return <DeclarationsContent />;
       default:
         return (
           <div className="flex items-center justify-center h-full">
