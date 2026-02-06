@@ -206,3 +206,30 @@ export const useUpdateSimplesLimit = () => {
     },
   });
 };
+
+export const useDeleteSimplesLimit = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("simples_limits").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["simples-limits"] });
+      queryClient.invalidateQueries({ queryKey: ["simples-stats"] });
+      toast({
+        title: "Registro removido",
+        description: "O sublimite foi excluído com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
