@@ -31,29 +31,97 @@ serve(async (req) => {
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Variáveis do Supabase não configuradas");
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Authentication: Validate JWT from Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized: Missing or invalid authorization header" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
 
+    // Create a client with the user's JWT to verify authentication
+    const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Verify the JWT and get user claims
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized: Invalid token" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized: User ID not found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    // Parse request body
     const { client_id, certificate_type, cnpj }: QueryRequest = await req.json();
 
     if (!client_id || !certificate_type || !cnpj) {
-      throw new Error("Parâmetros obrigatórios: client_id, certificate_type, cnpj");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parâmetros obrigatórios: client_id, certificate_type, cnpj" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     const endpoint = API_ENDPOINTS[certificate_type];
     if (!endpoint) {
-      throw new Error(`Tipo de certidão inválido: ${certificate_type}`);
+      return new Response(
+        JSON.stringify({ success: false, error: `Tipo de certidão inválido: ${certificate_type}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
-    // Clean CNPJ - remove formatting
-    const cleanCnpj = cnpj.replace(/[^\d]/g, "");
+    // Authorization: Verify client ownership using the user's context
+    const { data: client, error: clientError } = await supabaseAuth
+      .from("clients")
+      .select("id, user_id, cnpj")
+      .eq("id", client_id)
+      .single();
 
-    console.log(`Consultando ${certificate_type} para CNPJ ${cleanCnpj}`);
+    if (clientError || !client) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Cliente não encontrado" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+      );
+    }
+
+    // Verify the authenticated user owns this client
+    if (client.user_id !== userId) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Acesso negado: você não tem permissão para este cliente" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
+    // Verify CNPJ matches the client record
+    const cleanCnpj = cnpj.replace(/[^\d]/g, "");
+    const storedCnpj = client.cnpj.replace(/[^\d]/g, "");
+    if (cleanCnpj !== storedCnpj) {
+      return new Response(
+        JSON.stringify({ success: false, error: "CNPJ não corresponde ao cliente" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    console.log(`User ${userId} querying ${certificate_type} for client ${client_id}`);
 
     // Make API request to InfoSimples
     const apiResponse = await fetch(endpoint, {
@@ -70,7 +138,7 @@ serve(async (req) => {
 
     const apiData = await apiResponse.json();
 
-    console.log("API Response:", JSON.stringify(apiData, null, 2));
+    console.log("API Response code:", apiData.code);
 
     // Parse response and determine status
     let status: "ok" | "pending" | "attention" | "expired" = "pending";
@@ -116,8 +184,11 @@ serve(async (req) => {
       notes = apiData.message || "Erro na consulta";
     }
 
+    // Use service role client for database operations (to bypass RLS for insert/update)
+    const supabaseService = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
     // Check if certificate already exists for this client and type
-    const { data: existingCert } = await supabase
+    const { data: existingCert } = await supabaseService
       .from("certificates")
       .select("id")
       .eq("client_id", client_id)
@@ -128,7 +199,7 @@ serve(async (req) => {
 
     if (existingCert) {
       // Update existing certificate
-      const { data, error } = await supabase
+      const { data, error } = await supabaseService
         .from("certificates")
         .update({
           status,
@@ -146,7 +217,7 @@ serve(async (req) => {
       result = data;
     } else {
       // Create new certificate record
-      const { data, error } = await supabase
+      const { data, error } = await supabaseService
         .from("certificates")
         .insert({
           client_id,
@@ -169,7 +240,6 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         certificate: result,
-        api_response: apiData,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -177,11 +247,11 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error:", error.message);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: "Erro interno ao processar a solicitação",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
