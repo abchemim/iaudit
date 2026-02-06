@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,7 +17,9 @@ import {
 import { MoreHorizontal, Eye, Edit, Trash2, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import FGTSStatusBadge from "./FGTSStatusBadge";
-import { useFGTSRecords, useUpdateFGTSRecord, useDeleteFGTSRecord, type FGTSFilters } from "@/hooks/useFGTSRecords";
+import { FGTSEditDialog } from "./FGTSEditDialog";
+import { FGTSViewDialog } from "./FGTSViewDialog";
+import { useFGTSRecords, useUpdateFGTSRecord, useDeleteFGTSRecord, type FGTSFilters, type FGTSRecord } from "@/hooks/useFGTSRecords";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -45,6 +48,9 @@ const FGTSTable = ({ filters }: FGTSTableProps) => {
   const { data: records, isLoading } = useFGTSRecords(filters);
   const updateRecord = useUpdateFGTSRecord();
   const deleteRecord = useDeleteFGTSRecord();
+
+  const [viewRecord, setViewRecord] = useState<FGTSRecord | null>(null);
+  const [editRecord, setEditRecord] = useState<FGTSRecord | null>(null);
 
   const handleMarkAsPaid = (id: string) => {
     updateRecord.mutate({
@@ -84,84 +90,100 @@ const FGTSTable = ({ filters }: FGTSTableProps) => {
   }
 
   return (
-    <div className="glass-card overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="text-muted-foreground">Empresa</TableHead>
-            <TableHead className="text-muted-foreground">Competência</TableHead>
-            <TableHead className="text-muted-foreground">Vencimento</TableHead>
-            <TableHead className="text-muted-foreground">Valor</TableHead>
-            <TableHead className="text-muted-foreground">Status</TableHead>
-            <TableHead className="text-muted-foreground">Pago em</TableHead>
-            <TableHead className="text-muted-foreground w-12"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {records.map((record) => (
-            <TableRow key={record.id} className="border-border">
-              <TableCell>
-                <div>
-                  <p className="font-medium text-foreground">
-                    {record.client?.trade_name || record.client?.company_name || "—"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {record.client?.cnpj || "—"}
-                  </p>
-                </div>
-              </TableCell>
-              <TableCell className="text-foreground capitalize">
-                {formatCompetence(record.competence_month)}
-              </TableCell>
-              <TableCell className="text-foreground">
-                {formatDate(record.due_date)}
-              </TableCell>
-              <TableCell className="text-foreground font-medium">
-                {formatCurrency(record.amount)}
-              </TableCell>
-              <TableCell>
-                <FGTSStatusBadge status={record.status} />
-              </TableCell>
-              <TableCell className="text-foreground">
-                {formatDate(record.paid_at)}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver detalhes
-                    </DropdownMenuItem>
-                    {record.status !== "ok" && (
-                      <DropdownMenuItem onClick={() => handleMarkAsPaid(record.id)}>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Marcar como pago
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-status-danger"
-                      onClick={() => handleDelete(record.id)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+    <>
+      <div className="glass-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Empresa</TableHead>
+              <TableHead className="text-muted-foreground">Competência</TableHead>
+              <TableHead className="text-muted-foreground">Vencimento</TableHead>
+              <TableHead className="text-muted-foreground">Valor</TableHead>
+              <TableHead className="text-muted-foreground">Status</TableHead>
+              <TableHead className="text-muted-foreground">Pago em</TableHead>
+              <TableHead className="text-muted-foreground w-12"></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {records.map((record) => (
+              <TableRow key={record.id} className="border-border">
+                <TableCell>
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {record.client?.trade_name || record.client?.company_name || "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {record.client?.cnpj || "—"}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell className="text-foreground capitalize">
+                  {formatCompetence(record.competence_month)}
+                </TableCell>
+                <TableCell className="text-foreground">
+                  {formatDate(record.due_date)}
+                </TableCell>
+                <TableCell className="text-foreground font-medium">
+                  {formatCurrency(record.amount)}
+                </TableCell>
+                <TableCell>
+                  <FGTSStatusBadge status={record.status} />
+                </TableCell>
+                <TableCell className="text-foreground">
+                  {formatDate(record.paid_at)}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setViewRecord(record)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver detalhes
+                      </DropdownMenuItem>
+                      {record.status !== "ok" && (
+                        <DropdownMenuItem onClick={() => handleMarkAsPaid(record.id)}>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Marcar como pago
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => setEditRecord(record)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-status-danger"
+                        onClick={() => handleDelete(record.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* View Dialog */}
+      <FGTSViewDialog
+        record={viewRecord}
+        open={!!viewRecord}
+        onOpenChange={(open) => !open && setViewRecord(null)}
+      />
+
+      {/* Edit Dialog */}
+      <FGTSEditDialog
+        record={editRecord}
+        open={!!editRecord}
+        onOpenChange={(open) => !open && setEditRecord(null)}
+      />
+    </>
   );
 };
 
