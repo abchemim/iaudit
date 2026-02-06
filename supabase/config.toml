@@ -2,3 +2,12 @@ project_id = "dtknaeiykrfjrzgvskvz"
 
 [functions.query-certificate]
 verify_jwt = false
+
+[functions.consulta-cnd]
+verify_jwt = false
+
+[functions.send-cnd-alert]
+verify_jwt = false
+
+[functions.check-cnd-vencimentos]
+verify_jwt = false
