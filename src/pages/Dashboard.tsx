@@ -6,6 +6,8 @@ import FGTSContent from "@/components/fgts/FGTSContent";
 import CertificatesContent from "@/components/certificates/CertificatesContent";
 import ClientsContent from "@/components/clients/ClientsContent";
 import DeclarationsContent from "@/components/declarations/DeclarationsContent";
+import InstallmentsContent from "@/components/installments/InstallmentsContent";
+import SimplesContent from "@/components/simples/SimplesContent";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -22,6 +24,10 @@ const Dashboard = () => {
         return <ClientsContent />;
       case "declaracoes":
         return <DeclarationsContent />;
+      case "parcelamentos":
+        return <InstallmentsContent />;
+      case "simples":
+        return <SimplesContent />;
       default:
         return (
           <div className="flex items-center justify-center h-full">
