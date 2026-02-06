@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import FGTSStatsCards from "./FGTSStatsCards";
 import FGTSFilters from "./FGTSFilters";
 import FGTSTable from "./FGTSTable";
+import { FGTSFormDialog } from "./FGTSFormDialog";
 import type { FGTSFilters as FGTSFiltersType } from "@/hooks/useFGTSRecords";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -31,10 +32,7 @@ const FGTSContent = () => {
             <RefreshCw className="w-4 h-4 mr-2" />
             Atualizar
           </Button>
-          <Button size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Guia
-          </Button>
+          <FGTSFormDialog />
         </div>
       </div>
 
