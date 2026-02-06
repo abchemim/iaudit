@@ -127,6 +127,198 @@ export type Database = {
         }
         Relationships: []
       }
+      cnd_certidoes: {
+        Row: {
+          alertado: boolean | null
+          api_response: Json | null
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          client_id: string
+          codigo_controle: string | null
+          created_at: string
+          data_emissao: string | null
+          data_validade: string | null
+          id: string
+          infosimples_creditos_usados: number | null
+          infosimples_query_id: string | null
+          infosimples_status: string | null
+          notes: string | null
+          numero_certidao: string | null
+          obtida_automaticamente: boolean | null
+          orgao: string
+          pdf_base64: string | null
+          proximo_check: string | null
+          situacao: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          alertado?: boolean | null
+          api_response?: Json | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          client_id: string
+          codigo_controle?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          data_validade?: string | null
+          id?: string
+          infosimples_creditos_usados?: number | null
+          infosimples_query_id?: string | null
+          infosimples_status?: string | null
+          notes?: string | null
+          numero_certidao?: string | null
+          obtida_automaticamente?: boolean | null
+          orgao?: string
+          pdf_base64?: string | null
+          proximo_check?: string | null
+          situacao?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          alertado?: boolean | null
+          api_response?: Json | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          client_id?: string
+          codigo_controle?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          data_validade?: string | null
+          id?: string
+          infosimples_creditos_usados?: number | null
+          infosimples_query_id?: string | null
+          infosimples_status?: string | null
+          notes?: string | null
+          numero_certidao?: string | null
+          obtida_automaticamente?: boolean | null
+          orgao?: string
+          pdf_base64?: string | null
+          proximo_check?: string | null
+          situacao?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cnd_certidoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_alertas: {
+        Row: {
+          alerta_cnd_vencimento: boolean | null
+          client_id: string | null
+          created_at: string
+          dias_antecedencia_alerta: number | null
+          email_ativo: boolean | null
+          email_endereco: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          whatsapp_ativo: boolean | null
+          whatsapp_numero: string | null
+        }
+        Insert: {
+          alerta_cnd_vencimento?: boolean | null
+          client_id?: string | null
+          created_at?: string
+          dias_antecedencia_alerta?: number | null
+          email_ativo?: boolean | null
+          email_endereco?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_ativo?: boolean | null
+          whatsapp_numero?: string | null
+        }
+        Update: {
+          alerta_cnd_vencimento?: boolean | null
+          client_id?: string | null
+          created_at?: string
+          dias_antecedencia_alerta?: number | null
+          email_ativo?: boolean | null
+          email_endereco?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_ativo?: boolean | null
+          whatsapp_numero?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_alertas_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      debitos_fiscais: {
+        Row: {
+          api_response: Json | null
+          client_id: string
+          created_at: string
+          descricao: string | null
+          detectado_via: string | null
+          id: string
+          origem: string
+          prioridade: string | null
+          resolvido_em: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          valor: number | null
+        }
+        Insert: {
+          api_response?: Json | null
+          client_id: string
+          created_at?: string
+          descricao?: string | null
+          detectado_via?: string | null
+          id?: string
+          origem: string
+          prioridade?: string | null
+          resolvido_em?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Update: {
+          api_response?: Json | null
+          client_id?: string
+          created_at?: string
+          descricao?: string | null
+          detectado_via?: string | null
+          id?: string
+          origem?: string
+          prioridade?: string | null
+          resolvido_em?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debitos_fiscais_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fgts_records: {
         Row: {
           amount: number | null
@@ -180,6 +372,42 @@ export type Database = {
           },
         ]
       }
+      infosimples_creditos: {
+        Row: {
+          cnpj_consultado: string | null
+          created_at: string
+          creditos_usados: number
+          custo_estimado: number | null
+          id: string
+          query_id: string | null
+          sucesso: boolean | null
+          tipo_consulta: string
+          user_id: string | null
+        }
+        Insert: {
+          cnpj_consultado?: string | null
+          created_at?: string
+          creditos_usados?: number
+          custo_estimado?: number | null
+          id?: string
+          query_id?: string | null
+          sucesso?: boolean | null
+          tipo_consulta: string
+          user_id?: string | null
+        }
+        Update: {
+          cnpj_consultado?: string | null
+          created_at?: string
+          creditos_usados?: number
+          custo_estimado?: number | null
+          id?: string
+          query_id?: string | null
+          sucesso?: boolean | null
+          tipo_consulta?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       installments: {
         Row: {
           client_id: string
@@ -232,6 +460,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "installments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logs_automacao: {
+        Row: {
+          acao: string
+          client_id: string | null
+          created_at: string
+          dados_retorno: Json | null
+          erro_detalhes: string | null
+          id: string
+          infosimples_creditos: number | null
+          infosimples_query_id: string | null
+          mensagem: string | null
+          stack_trace: string | null
+          status: string
+          tempo_execucao: number | null
+          workflow_n8n: string | null
+        }
+        Insert: {
+          acao: string
+          client_id?: string | null
+          created_at?: string
+          dados_retorno?: Json | null
+          erro_detalhes?: string | null
+          id?: string
+          infosimples_creditos?: number | null
+          infosimples_query_id?: string | null
+          mensagem?: string | null
+          stack_trace?: string | null
+          status?: string
+          tempo_execucao?: number | null
+          workflow_n8n?: string | null
+        }
+        Update: {
+          acao?: string
+          client_id?: string | null
+          created_at?: string
+          dados_retorno?: Json | null
+          erro_detalhes?: string | null
+          id?: string
+          infosimples_creditos?: number | null
+          infosimples_query_id?: string | null
+          mensagem?: string | null
+          stack_trace?: string | null
+          status?: string
+          tempo_execucao?: number | null
+          workflow_n8n?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_automacao_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
