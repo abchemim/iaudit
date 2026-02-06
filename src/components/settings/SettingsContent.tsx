@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, User, Bell, Shield, Database, Key, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,11 +9,20 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentUserProfile, useUpdateUserProfile, ROLE_LABELS } from "@/hooks/useUserProfile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SettingsContent = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: profile, isLoading } = useCurrentUserProfile();
+  const updateProfile = useUpdateUserProfile();
   
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+  });
+
   const [notifications, setNotifications] = useState({
     email: true,
     whatsapp: false,
@@ -22,10 +31,19 @@ const SettingsContent = () => {
     fgts: true,
   });
 
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        phone: profile.phone || "",
+      });
+    }
+  }, [profile]);
+
   const handleSave = () => {
-    toast({
-      title: "Configurações salvas",
-      description: "Suas preferências foram atualizadas com sucesso.",
+    updateProfile.mutate({
+      name: formData.name,
+      phone: formData.phone,
     });
   };
 
@@ -39,9 +57,9 @@ const SettingsContent = () => {
             Gerencie suas preferências e configurações do sistema.
           </p>
         </div>
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} disabled={updateProfile.isPending}>
           <Save className="w-4 h-4 mr-2" />
-          Salvar Alterações
+          {updateProfile.isPending ? "Salvando..." : "Salvar Alterações"}
         </Button>
       </div>
 
@@ -75,26 +93,49 @@ const SettingsContent = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input id="name" placeholder="Seu nome" defaultValue="Administrador" />
+              {isLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={user?.email || ""} disabled />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" placeholder="(00) 00000-0000" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Cargo</Label>
-                  <Input id="role" placeholder="Ex: Contador" />
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome Completo</Label>
+                      <Input
+                        id="name"
+                        placeholder="Seu nome"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={user?.email || ""} disabled />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        placeholder="(00) 00000-0000"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Perfil</Label>
+                      <Input
+                        id="role"
+                        value={profile ? ROLE_LABELS[profile.role] : ""}
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
               
               <Separator className="my-6" />
               
