@@ -1,0 +1,272 @@
+{
+  "name": "IAudit - Consulta CND Federal (PGFN)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/clients",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "id,cnpj,company_name,state,is_active"
+            },
+            {
+              "name": "is_active",
+              "value": "eq.true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-clients",
+      "name": "Buscar Empresas Ativas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/functions/v1/consulta-cnd",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "tipo",
+              "value": "federal"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "consulta-cnd-federal",
+      "name": "Consultar CND Federal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "wait-rate-limit",
+      "name": "Aguardar (Rate Limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1060, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Verificar Sucesso",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1280, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/logs_automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_n8n\": \"iaudit_cnd_federal\",\n  \"acao\": \"consulta_cnd_federal_batch\",\n  \"status\": \"sucesso\",\n  \"mensagem\": \"Workflow CND Federal executado com sucesso\",\n  \"dados_retorno\": {{ JSON.stringify($json) }}\n}",
+        "options": {}
+      },
+      "id": "log-success",
+      "name": "Log Sucesso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/logs_automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_n8n\": \"iaudit_cnd_federal\",\n  \"acao\": \"consulta_cnd_federal_batch\",\n  \"status\": \"erro\",\n  \"erro_detalhes\": {{ JSON.stringify($json.error || $json) }}\n}",
+        "options": {}
+      },
+      "id": "log-error",
+      "name": "Log Erro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 400]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [{ "node": "Buscar Empresas Ativas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar Empresas Ativas": {
+      "main": [
+        [{ "node": "Split in Batches", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split in Batches": {
+      "main": [
+        [{ "node": "Consultar CND Federal", "type": "main", "index": 0 }]
+      ]
+    },
+    "Consultar CND Federal": {
+      "main": [
+        [{ "node": "Aguardar (Rate Limit)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Aguardar (Rate Limit)": {
+      "main": [
+        [{ "node": "Verificar Sucesso", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar Sucesso": {
+      "main": [
+        [{ "node": "Log Sucesso", "type": "main", "index": 0 }],
+        [{ "node": "Log Erro", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Sucesso": {
+      "main": [
+        [{ "node": "Split in Batches", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Erro": {
+      "main": [
+        [{ "node": "Split in Batches", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "IAudit" },
+    { "name": "CND" },
+    { "name": "Automação" }
+  ],
+  "triggerCount": 1
+}

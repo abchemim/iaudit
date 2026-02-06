@@ -1,0 +1,178 @@
+{
+  "name": "IAudit - Consulta Manual (Webhook)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consulta-manual",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-consulta",
+      "name": "Webhook Consulta Manual",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 300],
+      "webhookId": "consulta-manual"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.tipo }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-input",
+      "name": "Validar Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/functions/v1/consulta-cnd",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $json.body.client_id }}\",\n  \"tipo\": \"{{ $json.body.tipo }}\"\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "execute-consulta",
+      "name": "Executar Consulta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "success",
+              "value": "false"
+            },
+            {
+              "name": "error",
+              "value": "Parâmetros inválidos. Envie: { client_id, tipo }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "error-response",
+      "name": "Erro de Validação",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [620, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/logs_automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_n8n\": \"iaudit_consulta_manual\",\n  \"acao\": \"consulta_manual_webhook\",\n  \"status\": \"{{ $json.success ? 'sucesso' : 'erro' }}\",\n  \"mensagem\": \"Consulta manual via webhook\",\n  \"dados_retorno\": {{ JSON.stringify($json) }}\n}",
+        "options": {}
+      },
+      "id": "log-consulta-manual",
+      "name": "Log Consulta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1060, 200]
+    }
+  ],
+  "connections": {
+    "Webhook Consulta Manual": {
+      "main": [
+        [{ "node": "Validar Input", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validar Input": {
+      "main": [
+        [{ "node": "Executar Consulta", "type": "main", "index": 0 }],
+        [{ "node": "Erro de Validação", "type": "main", "index": 0 }]
+      ]
+    },
+    "Executar Consulta": {
+      "main": [
+        [{ "node": "Log Consulta", "type": "main", "index": 0 }]
+      ]
+    },
+    "Erro de Validação": {
+      "main": [
+        [{ "node": "Responder Webhook", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Consulta": {
+      "main": [
+        [{ "node": "Responder Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "IAudit" },
+    { "name": "Webhook" },
+    { "name": "Manual" }
+  ],
+  "triggerCount": 1
+}

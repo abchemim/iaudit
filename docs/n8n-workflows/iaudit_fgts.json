@@ -1,0 +1,330 @@
+{
+  "name": "IAudit - Consulta FGTS (Caixa)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-fgts",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/clients",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "id,cnpj,company_name,is_active"
+            },
+            {
+              "name": "is_active",
+              "value": "eq.true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-clients-fgts",
+      "name": "Buscar Empresas Ativas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "split-batches-fgts",
+      "name": "Split in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/functions/v1/consulta-cnd",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "tipo",
+              "value": "fgts"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "consulta-fgts",
+      "name": "Consultar FGTS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "wait-rate-limit-fgts",
+      "name": "Aguardar (Rate Limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1060, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success-fgts",
+      "name": "Verificar Sucesso",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1280, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.cnd?.status === 'vencendo' }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-vencendo-fgts",
+      "name": "CND Vencendo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1500, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/functions/v1/send-cnd-alert",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $json.cnd.client_id }}\",\n  \"cnd_id\": \"{{ $json.cnd.id }}\",\n  \"tipo\": \"fgts\",\n  \"dias_vencimento\": 15,\n  \"arquivo_url\": \"{{ $json.cnd.arquivo_url }}\"\n}",
+        "options": {}
+      },
+      "id": "send-alert-fgts",
+      "name": "Enviar Alerta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1720, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/logs_automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_n8n\": \"iaudit_fgts\",\n  \"acao\": \"consulta_fgts_batch\",\n  \"status\": \"sucesso\",\n  \"mensagem\": \"Workflow FGTS executado com sucesso\",\n  \"infosimples_creditos\": {{ $json.creditos_usados || 0 }}\n}",
+        "options": {}
+      },
+      "id": "log-success-fgts",
+      "name": "Log Sucesso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dtknaeiykrfjrzgvskvz.supabase.co/rest/v1/logs_automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0a25hZWl5a3JmanJ6Z3Zza3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTk0NTQsImV4cCI6MjA4NTg5NTQ1NH0.VgXbpEiwtYqbUhJg6ET4JMrxckjI5tg1m6svQdLbzuE"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.supabaseServiceRoleKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_n8n\": \"iaudit_fgts\",\n  \"acao\": \"consulta_fgts_batch\",\n  \"status\": \"erro\",\n  \"erro_detalhes\": {{ JSON.stringify($json.error || $json) }}\n}",
+        "options": {}
+      },
+      "id": "log-error-fgts",
+      "name": "Log Erro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 420]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [{ "node": "Buscar Empresas Ativas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar Empresas Ativas": {
+      "main": [
+        [{ "node": "Split in Batches", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split in Batches": {
+      "main": [
+        [{ "node": "Consultar FGTS", "type": "main", "index": 0 }]
+      ]
+    },
+    "Consultar FGTS": {
+      "main": [
+        [{ "node": "Aguardar (Rate Limit)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Aguardar (Rate Limit)": {
+      "main": [
+        [{ "node": "Verificar Sucesso", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar Sucesso": {
+      "main": [
+        [{ "node": "CND Vencendo?", "type": "main", "index": 0 }],
+        [{ "node": "Log Erro", "type": "main", "index": 0 }]
+      ]
+    },
+    "CND Vencendo?": {
+      "main": [
+        [{ "node": "Enviar Alerta", "type": "main", "index": 0 }],
+        [{ "node": "Log Sucesso", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enviar Alerta": {
+      "main": [
+        [{ "node": "Log Sucesso", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Sucesso": {
+      "main": [
+        [{ "node": "Split in Batches", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Erro": {
+      "main": [
+        [{ "node": "Split in Batches", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "IAudit" },
+    { "name": "FGTS" },
+    { "name": "Automação" }
+  ],
+  "triggerCount": 1
+}
