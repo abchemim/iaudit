@@ -2,9 +2,29 @@ import { useState } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
+import FGTSContent from "@/components/fgts/FGTSContent";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <DashboardContent />;
+      case "fgts":
+        return <FGTSContent />;
+      default:
+        return (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-muted-foreground">
+                Conteúdo de <span className="font-semibold text-foreground">{activeTab}</span> em desenvolvimento.
+              </p>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -14,17 +34,7 @@ const Dashboard = () => {
         <DashboardHeader activeTab={activeTab} />
         
         <main className="flex-1 overflow-auto">
-          {activeTab === "dashboard" && <DashboardContent />}
-          
-          {activeTab !== "dashboard" && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  Conteúdo de <span className="font-semibold text-foreground">{activeTab}</span> em desenvolvimento.
-                </p>
-              </div>
-            </div>
-          )}
+          {renderContent()}
         </main>
       </div>
     </div>
