@@ -8,6 +8,10 @@ import ClientsContent from "@/components/clients/ClientsContent";
 import DeclarationsContent from "@/components/declarations/DeclarationsContent";
 import InstallmentsContent from "@/components/installments/InstallmentsContent";
 import SimplesContent from "@/components/simples/SimplesContent";
+import MailboxContent from "@/components/mailbox/MailboxContent";
+import UsersContent from "@/components/users/UsersContent";
+import SettingsContent from "@/components/settings/SettingsContent";
+import HelpContent from "@/components/help/HelpContent";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -28,6 +32,14 @@ const Dashboard = () => {
         return <InstallmentsContent />;
       case "simples":
         return <SimplesContent />;
+      case "caixaspostais":
+        return <MailboxContent />;
+      case "usuarios":
+        return <UsersContent />;
+      case "configuracoes":
+        return <SettingsContent />;
+      case "ajuda":
+        return <HelpContent />;
       default:
         return (
           <div className="flex items-center justify-center h-full">
