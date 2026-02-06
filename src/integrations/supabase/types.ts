@@ -14,7 +14,366 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      certificates: {
+        Row: {
+          certificate_number: string | null
+          client_id: string
+          created_at: string
+          document_url: string | null
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          last_checked_at: string | null
+          notes: string | null
+          status: Database["public"]["Enums"]["status_type"]
+          type: Database["public"]["Enums"]["certificate_type"]
+          updated_at: string
+        }
+        Insert: {
+          certificate_number?: string | null
+          client_id: string
+          created_at?: string
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          last_checked_at?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          type: Database["public"]["Enums"]["certificate_type"]
+          updated_at?: string
+        }
+        Update: {
+          certificate_number?: string | null
+          client_id?: string
+          created_at?: string
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          last_checked_at?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          type?: Database["public"]["Enums"]["certificate_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          address: string | null
+          city: string | null
+          cnpj: string
+          company_name: string
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          municipal_registration: string | null
+          phone: string | null
+          state: string | null
+          state_registration: string | null
+          tax_regime: Database["public"]["Enums"]["tax_regime"]
+          trade_name: string | null
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          cnpj: string
+          company_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          municipal_registration?: string | null
+          phone?: string | null
+          state?: string | null
+          state_registration?: string | null
+          tax_regime?: Database["public"]["Enums"]["tax_regime"]
+          trade_name?: string | null
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          cnpj?: string
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          municipal_registration?: string | null
+          phone?: string | null
+          state?: string | null
+          state_registration?: string | null
+          tax_regime?: Database["public"]["Enums"]["tax_regime"]
+          trade_name?: string | null
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      fgts_records: {
+        Row: {
+          amount: number | null
+          client_id: string
+          competence_month: string
+          created_at: string
+          due_date: string | null
+          guide_number: string | null
+          id: string
+          notes: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["status_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          client_id: string
+          competence_month: string
+          created_at?: string
+          due_date?: string | null
+          guide_number?: string | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          client_id?: string
+          competence_month?: string
+          created_at?: string
+          due_date?: string | null
+          guide_number?: string | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fgts_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installments: {
+        Row: {
+          client_id: string
+          created_at: string
+          current_installment: number | null
+          id: string
+          installment_count: number
+          monthly_amount: number | null
+          next_due_date: string | null
+          notes: string | null
+          paid_amount: number | null
+          program_name: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["status_type"]
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          current_installment?: number | null
+          id?: string
+          installment_count: number
+          monthly_amount?: number | null
+          next_due_date?: string | null
+          notes?: string | null
+          paid_amount?: number | null
+          program_name: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          current_installment?: number | null
+          id?: string
+          installment_count?: number
+          monthly_amount?: number | null
+          next_due_date?: string | null
+          notes?: string | null
+          paid_amount?: number | null
+          program_name?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simples_limits: {
+        Row: {
+          accumulated_revenue: number
+          client_id: string
+          id: string
+          limit_amount: number
+          percentage_used: number | null
+          status: Database["public"]["Enums"]["status_type"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          accumulated_revenue?: number
+          client_id: string
+          id?: string
+          limit_amount?: number
+          percentage_used?: number | null
+          status?: Database["public"]["Enums"]["status_type"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          accumulated_revenue?: number
+          client_id?: string
+          id?: string
+          limit_amount?: number
+          percentage_used?: number | null
+          status?: Database["public"]["Enums"]["status_type"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simples_limits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_declarations: {
+        Row: {
+          client_id: string
+          competence_month: string
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          receipt_number: string | null
+          status: Database["public"]["Enums"]["status_type"]
+          submitted_at: string | null
+          tax_amount: number | null
+          type: Database["public"]["Enums"]["declaration_type"]
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          competence_month: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          receipt_number?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          submitted_at?: string | null
+          tax_amount?: number | null
+          type: Database["public"]["Enums"]["declaration_type"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          competence_month?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          receipt_number?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          submitted_at?: string | null
+          tax_amount?: number | null
+          type?: Database["public"]["Enums"]["declaration_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_declarations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +382,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      certificate_type:
+        | "cnd_federal"
+        | "cnd_estadual"
+        | "cnd_municipal"
+        | "cnd_trabalhista"
+        | "cnd_fgts"
+      declaration_type:
+        | "pgdas"
+        | "pgmei"
+        | "dctfweb"
+        | "sped_fiscal"
+        | "sped_contabil"
+        | "ecd"
+        | "ecf"
+      status_type: "ok" | "pending" | "attention" | "expired"
+      tax_regime: "simples_nacional" | "lucro_presumido" | "lucro_real" | "mei"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +524,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      certificate_type: [
+        "cnd_federal",
+        "cnd_estadual",
+        "cnd_municipal",
+        "cnd_trabalhista",
+        "cnd_fgts",
+      ],
+      declaration_type: [
+        "pgdas",
+        "pgmei",
+        "dctfweb",
+        "sped_fiscal",
+        "sped_contabil",
+        "ecd",
+        "ecf",
+      ],
+      status_type: ["ok", "pending", "attention", "expired"],
+      tax_regime: ["simples_nacional", "lucro_presumido", "lucro_real", "mei"],
+    },
   },
 } as const
