@@ -67,11 +67,11 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const mainMenuItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { id: "clientes", icon: Building2, label: "Clientes" },
-    { id: "simples", icon: Receipt, label: "Simples Nacional" },
-    { id: "dctfweb", icon: FileText, label: "DCTFWeb" },
+    { id: "declaracoes", icon: FileText, label: "Declarações" },
     { id: "fgts", icon: FileCheck, label: "FGTS Digital" },
+    { id: "certidoes", icon: Shield, label: "Certidões" },
     { id: "parcelamentos", icon: FolderOpen, label: "Parcelamentos" },
-    { id: "certidoes", icon: FileCheck, label: "Certidões" },
+    { id: "simples", icon: Receipt, label: "Sublimites" },
     { id: "caixaspostais", icon: Mail, label: "Caixas Postais" },
   ];
 
