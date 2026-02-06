@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, RefreshCw, Users, UserCheck, UserX, Shield } from "lucide-react";
+import { Plus, Users, UserCheck, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,69 +12,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Trash2, Key } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Mock users for demonstration
-const mockUsers = [
-  {
-    id: "1",
-    email: "admin@escritorio.com",
-    name: "Administrador",
-    role: "admin",
-    status: "active",
-    last_login: "2026-02-06T10:30:00",
-    created_at: "2025-01-15",
-  },
-  {
-    id: "2",
-    email: "contador@escritorio.com",
-    name: "João Silva",
-    role: "accountant",
-    status: "active",
-    last_login: "2026-02-05T14:20:00",
-    created_at: "2025-03-10",
-  },
-  {
-    id: "3",
-    email: "assistente@escritorio.com",
-    name: "Maria Santos",
-    role: "assistant",
-    status: "active",
-    last_login: "2026-02-04T09:15:00",
-    created_at: "2025-06-20",
-  },
-];
-
-const roleLabels: Record<string, string> = {
-  admin: "Administrador",
-  accountant: "Contador",
-  assistant: "Assistente",
-};
+import { useCurrentUserProfile, ROLE_LABELS } from "@/hooks/useUserProfile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const UsersContent = () => {
   const { user } = useAuth();
+  const { data: profile, isLoading } = useCurrentUserProfile();
   const [search, setSearch] = useState("");
 
-  const filteredUsers = mockUsers.filter((u) => {
+  // For now, we only show the current user's profile
+  // In a multi-tenant setup, you would fetch all users in the organization
+  const users = profile ? [profile] : [];
+
+  const filteredUsers = users.filter((u) => {
     if (!search) return true;
     const searchLower = search.toLowerCase();
     return (
-      u.name.toLowerCase().includes(searchLower) ||
-      u.email.toLowerCase().includes(searchLower)
+      u.name?.toLowerCase().includes(searchLower) ||
+      u.email?.toLowerCase().includes(searchLower)
     );
   });
 
   const stats = {
-    total: mockUsers.length,
-    active: mockUsers.filter((u) => u.status === "active").length,
-    admins: mockUsers.filter((u) => u.role === "admin").length,
+    total: users.length,
+    active: users.filter((u) => u.is_active).length,
+    admins: users.filter((u) => u.role === "admin").length,
   };
 
   return (
@@ -87,7 +50,7 @@ const UsersContent = () => {
             Gerencie os usuários e permissões do sistema.
           </p>
         </div>
-        <Button>
+        <Button disabled>
           <Plus className="w-4 h-4 mr-2" />
           Novo Usuário
         </Button>
@@ -148,76 +111,67 @@ const UsersContent = () => {
 
       {/* Users Table */}
       <div className="glass-card p-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuário</TableHead>
-              <TableHead>Perfil</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Último Acesso</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{u.name}</p>
-                    <p className="text-xs text-muted-foreground">{u.email}</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                    {roleLabels[u.role]}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={
-                      u.status === "active"
-                        ? "bg-status-success/10 text-status-success border-status-success/30"
-                        : "bg-muted text-muted-foreground"
-                    }
-                  >
-                    {u.status === "active" ? "Ativo" : "Inativo"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {new Date(u.last_login).toLocaleString("pt-BR")}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {new Date(u.created_at).toLocaleDateString("pt-BR")}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Key className="w-4 h-4 mr-2" />
-                        Redefinir Senha
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Desativar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" />
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum usuário encontrado.</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Usuário</TableHead>
+                <TableHead>Perfil</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Último Acesso</TableHead>
+                <TableHead>Criado em</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{u.name || "Sem nome"}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={u.role === "admin" ? "default" : "secondary"}>
+                      {ROLE_LABELS[u.role]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        u.is_active
+                          ? "bg-status-success/10 text-status-success border-status-success/30"
+                          : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {u.is_active ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {u.last_login_at
+                      ? new Date(u.last_login_at).toLocaleString("pt-BR")
+                      : "Nunca"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       {/* Current User Info */}
@@ -229,6 +183,22 @@ const UsersContent = () => {
               <p className="font-medium text-foreground">Usuário Atual</p>
               <p className="text-sm text-muted-foreground">
                 Logado como: {user?.email}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Multi-user Notice */}
+      <Card className="mt-4 border-dashed">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="font-medium text-foreground">Gerenciamento de Equipe</p>
+              <p className="text-sm text-muted-foreground">
+                O gerenciamento multi-usuário está disponível em planos empresariais. 
+                Entre em contato para adicionar mais usuários ao seu escritório.
               </p>
             </div>
           </div>
