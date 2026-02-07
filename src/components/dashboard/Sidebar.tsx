@@ -84,10 +84,24 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   return (
     <aside
       className={cn(
-        "h-screen bg-sidebar-background border-r border-sidebar-border flex flex-col transition-all duration-300",
+        "h-screen bg-sidebar-background border-r border-sidebar-border flex flex-col transition-all duration-300 relative",
         collapsed ? "w-16" : "w-64"
       )}
     >
+      {/* Collapse Button - Floating on the edge */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute -right-3 top-5 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar-background shadow-md hover:bg-secondary"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? (
+          <ChevronRight className="h-3 w-3" />
+        ) : (
+          <ChevronLeft className="h-3 w-3" />
+        )}
+      </Button>
+
       {/* Logo */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -136,25 +150,6 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             onClick={() => onTabChange(item.id)}
           />
         ))}
-      </div>
-
-      {/* Collapse Button */}
-      <div className="p-3 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-center"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <>
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              <span>Recolher</span>
-            </>
-          )}
-        </Button>
       </div>
     </aside>
   );
