@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { 
   HelpCircle, 
   Book, 
@@ -7,16 +8,37 @@ import {
   ExternalLink,
   Mail,
   Phone,
-  Clock
+  Clock,
+  Loader2,
+  Send
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const faqs = [
   {
@@ -46,6 +68,60 @@ const faqs = [
 ];
 
 const HelpContent = () => {
+  const { toast } = useToast();
+  const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ticketData, setTicketData] = useState({
+    subject: "",
+    category: "",
+    description: "",
+  });
+
+  const handleOpenDocumentation = () => {
+    toast({
+      title: "Documentação",
+      description: "A documentação completa estará disponível em breve.",
+    });
+  };
+
+  const handleOpenVideos = () => {
+    toast({
+      title: "Tutoriais em Vídeo",
+      description: "Os tutoriais em vídeo estão sendo preparados e estarão disponíveis em breve.",
+    });
+  };
+
+  const handleOpenNews = () => {
+    toast({
+      title: "Novidades",
+      description: "Confira as últimas atualizações do sistema.",
+    });
+  };
+
+  const handleSubmitTicket = async () => {
+    if (!ticketData.subject || !ticketData.category || !ticketData.description) {
+      toast({
+        title: "Preencha todos os campos",
+        description: "Todos os campos são obrigatórios para abrir um chamado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    // Simulating ticket submission
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    toast({
+      title: "Chamado aberto com sucesso!",
+      description: "Nossa equipe entrará em contato em até 24 horas úteis.",
+    });
+    
+    setTicketData({ subject: "", category: "", description: "" });
+    setTicketDialogOpen(false);
+    setIsSubmitting(false);
+  };
+
   return (
     <div className="flex-1 overflow-auto p-6">
       {/* Page Header */}
@@ -61,7 +137,10 @@ const HelpContent = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Quick Links */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer">
+            <Card
+              className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer"
+              onClick={handleOpenDocumentation}
+            >
               <CardContent className="p-4 flex flex-col items-center text-center">
                 <div className="p-3 rounded-lg bg-primary/10 mb-3">
                   <Book className="w-6 h-6 text-primary" />
@@ -72,7 +151,10 @@ const HelpContent = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer">
+            <Card
+              className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer"
+              onClick={handleOpenVideos}
+            >
               <CardContent className="p-4 flex flex-col items-center text-center">
                 <div className="p-3 rounded-lg bg-primary/10 mb-3">
                   <Video className="w-6 h-6 text-primary" />
@@ -83,7 +165,10 @@ const HelpContent = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer">
+            <Card
+              className="glass-card hover:bg-secondary/50 transition-colors cursor-pointer"
+              onClick={handleOpenNews}
+            >
               <CardContent className="p-4 flex flex-col items-center text-center">
                 <div className="p-3 rounded-lg bg-primary/10 mb-3">
                   <FileText className="w-6 h-6 text-primary" />
@@ -196,20 +281,26 @@ const HelpContent = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
+              <a
+                href="mailto:suporte@iaudit.com.br"
+                className="flex items-center gap-3 hover:text-primary transition-colors"
+              >
                 <Mail className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Email</p>
                   <p className="text-sm text-muted-foreground">suporte@iaudit.com.br</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
+              </a>
+              <a
+                href="tel:+554130000000"
+                className="flex items-center gap-3 hover:text-primary transition-colors"
+              >
                 <Phone className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Telefone</p>
                   <p className="text-sm text-muted-foreground">(41) 3000-0000</p>
                 </div>
-              </div>
+              </a>
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-muted-foreground" />
                 <div>
@@ -217,7 +308,7 @@ const HelpContent = () => {
                   <p className="text-sm text-muted-foreground">Seg-Sex: 8h às 18h</p>
                 </div>
               </div>
-              <Button className="w-full mt-4">
+              <Button className="w-full mt-4" onClick={() => setTicketDialogOpen(true)}>
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Abrir Chamado
               </Button>
@@ -283,6 +374,75 @@ const HelpContent = () => {
           </Card>
         </div>
       </div>
+
+      {/* Ticket Dialog */}
+      <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Abrir Chamado de Suporte</DialogTitle>
+            <DialogDescription>
+              Descreva seu problema ou dúvida e nossa equipe entrará em contato.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="subject">Assunto</Label>
+              <Input
+                id="subject"
+                placeholder="Resumo do problema"
+                value={ticketData.subject}
+                onChange={(e) => setTicketData({ ...ticketData, subject: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={ticketData.category}
+                onValueChange={(value) => setTicketData({ ...ticketData, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bug">Erro/Bug</SelectItem>
+                  <SelectItem value="duvida">Dúvida</SelectItem>
+                  <SelectItem value="sugestao">Sugestão</SelectItem>
+                  <SelectItem value="integracao">Problemas de Integração</SelectItem>
+                  <SelectItem value="outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                placeholder="Descreva detalhadamente o problema ou dúvida..."
+                rows={5}
+                value={ticketData.description}
+                onChange={(e) => setTicketData({ ...ticketData, description: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTicketDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmitTicket} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Enviar Chamado
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
