@@ -14,59 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      certificates: {
-        Row: {
-          certificate_number: string | null
-          client_id: string
-          created_at: string
-          document_url: string | null
-          expiry_date: string | null
-          id: string
-          issue_date: string | null
-          last_checked_at: string | null
-          notes: string | null
-          status: Database["public"]["Enums"]["status_type"]
-          type: Database["public"]["Enums"]["certificate_type"]
-          updated_at: string
-        }
-        Insert: {
-          certificate_number?: string | null
-          client_id: string
-          created_at?: string
-          document_url?: string | null
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string | null
-          last_checked_at?: string | null
-          notes?: string | null
-          status?: Database["public"]["Enums"]["status_type"]
-          type: Database["public"]["Enums"]["certificate_type"]
-          updated_at?: string
-        }
-        Update: {
-          certificate_number?: string | null
-          client_id?: string
-          created_at?: string
-          document_url?: string | null
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string | null
-          last_checked_at?: string | null
-          notes?: string | null
-          status?: Database["public"]["Enums"]["status_type"]
-          type?: Database["public"]["Enums"]["certificate_type"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "certificates_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       clients: {
         Row: {
           address: string | null
