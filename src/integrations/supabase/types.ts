@@ -410,31 +410,37 @@ export type Database = {
       }
       infosimples_saldo_historico: {
         Row: {
-          alerta_enviado: boolean | null
-          created_at: string
-          data_verificacao: string
+          api_response: Json | null
+          created_at: string | null
+          creditos_usados_mes: number | null
+          data_consulta: string | null
           id: string
-          saldo_creditos: number
-          saldo_reais: number | null
-          user_id: string | null
+          plano: string | null
+          saldo: number | null
+          saldo_atual: number | null
+          saldo_creditos: number | null
         }
         Insert: {
-          alerta_enviado?: boolean | null
-          created_at?: string
-          data_verificacao?: string
+          api_response?: Json | null
+          created_at?: string | null
+          creditos_usados_mes?: number | null
+          data_consulta?: string | null
           id?: string
-          saldo_creditos: number
-          saldo_reais?: number | null
-          user_id?: string | null
+          plano?: string | null
+          saldo?: number | null
+          saldo_atual?: number | null
+          saldo_creditos?: number | null
         }
         Update: {
-          alerta_enviado?: boolean | null
-          created_at?: string
-          data_verificacao?: string
+          api_response?: Json | null
+          created_at?: string | null
+          creditos_usados_mes?: number | null
+          data_consulta?: string | null
           id?: string
-          saldo_creditos?: number
-          saldo_reais?: number | null
-          user_id?: string | null
+          plano?: string | null
+          saldo?: number | null
+          saldo_atual?: number | null
+          saldo_creditos?: number | null
         }
         Relationships: []
       }
@@ -684,7 +690,7 @@ export type Database = {
       }
       tarefas: {
         Row: {
-          client_id: string
+          client_id: string | null
           concluido_em: string | null
           created_at: string
           descricao: string | null
@@ -696,11 +702,11 @@ export type Database = {
           tipo: string
           titulo: string
           updated_at: string
-          user_id: string
+          user_id: string | null
           vencimento: string | null
         }
         Insert: {
-          client_id: string
+          client_id?: string | null
           concluido_em?: string | null
           created_at?: string
           descricao?: string | null
@@ -712,11 +718,11 @@ export type Database = {
           tipo?: string
           titulo: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           vencimento?: string | null
         }
         Update: {
-          client_id?: string
+          client_id?: string | null
           concluido_em?: string | null
           created_at?: string
           descricao?: string | null
@@ -728,7 +734,7 @@ export type Database = {
           tipo?: string
           titulo?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           vencimento?: string | null
         }
         Relationships: [
