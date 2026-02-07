@@ -28,15 +28,15 @@ const SettingsContent = () => {
   const { toast } = useToast();
   const { data: profile, isLoading } = useCurrentUserProfile();
   const updateProfile = useUpdateUserProfile();
-  
+
   // Company settings
   const { data: companySettings, isLoading: isLoadingCompany } = useCompanySettings();
   const updateCompanySettings = useUpdateCompanySettings();
-  
+
   // Notification settings
   const { data: notificationSettings, isLoading: isLoadingNotifications } = useNotificationSettings();
   const updateNotificationSettings = useUpdateNotificationSettings();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -218,9 +218,7 @@ const SettingsContent = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-foreground">Configurações</h2>
-          <p className="text-sm text-muted-foreground">
-            Gerencie suas preferências e configurações do sistema.
-          </p>
+          <p className="text-sm text-muted-foreground">Gerencie suas preferências e configurações do sistema.</p>
         </div>
       </div>
 
@@ -249,9 +247,7 @@ const SettingsContent = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="text-lg">Informações do Perfil</CardTitle>
-              <CardDescription>
-                Atualize suas informações pessoais e credenciais.
-              </CardDescription>
+              <CardDescription>Atualize suas informações pessoais e credenciais.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {isLoading ? (
@@ -288,11 +284,7 @@ const SettingsContent = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="role">Perfil</Label>
-                      <Input
-                        id="role"
-                        value={profile ? ROLE_LABELS[profile.role] : ""}
-                        disabled
-                      />
+                      <Input id="role" value={profile ? ROLE_LABELS[profile.role] : ""} disabled />
                     </div>
                   </div>
                   <div className="flex justify-end">
@@ -305,16 +297,16 @@ const SettingsContent = () => {
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Salvar Perfil
+                          Salvar
                         </>
                       )}
                     </Button>
                   </div>
                 </>
               )}
-              
+
               <Separator className="my-6" />
-              
+
               <div>
                 <h4 className="font-medium mb-4">Alterar Senha</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -373,9 +365,7 @@ const SettingsContent = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="text-lg">Preferências de Notificações</CardTitle>
-              <CardDescription>
-                Configure como e quando deseja receber alertas do sistema.
-              </CardDescription>
+              <CardDescription>Configure como e quando deseja receber alertas do sistema.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -383,29 +373,21 @@ const SettingsContent = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">
-                      Receba alertas por email
-                    </p>
+                    <p className="text-sm text-muted-foreground">Receba alertas por email</p>
                   </div>
                   <Switch
                     checked={notifications.email}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, email: checked })
-                    }
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">WhatsApp</p>
-                    <p className="text-sm text-muted-foreground">
-                      Receba alertas por WhatsApp
-                    </p>
+                    <p className="text-sm text-muted-foreground">Receba alertas por WhatsApp</p>
                   </div>
                   <Switch
                     checked={notifications.whatsapp}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, whatsapp: checked })
-                    }
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, whatsapp: checked })}
                   />
                 </div>
               </div>
@@ -423,37 +405,27 @@ const SettingsContent = () => {
                   </div>
                   <Switch
                     checked={notifications.certExpiry}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, certExpiry: checked })
-                    }
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, certExpiry: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Declarações Pendentes</p>
-                    <p className="text-sm text-muted-foreground">
-                      Alertar sobre declarações a vencer
-                    </p>
+                    <p className="text-sm text-muted-foreground">Alertar sobre declarações a vencer</p>
                   </div>
                   <Switch
                     checked={notifications.declarations}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, declarations: checked })
-                    }
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, declarations: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Guias FGTS</p>
-                    <p className="text-sm text-muted-foreground">
-                      Alertar sobre guias FGTS pendentes
-                    </p>
+                    <p className="text-sm text-muted-foreground">Alertar sobre guias FGTS pendentes</p>
                   </div>
                   <Switch
                     checked={notifications.fgts}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, fgts: checked })
-                    }
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, fgts: checked })}
                   />
                 </div>
               </div>
@@ -468,7 +440,7 @@ const SettingsContent = () => {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Salvar Preferências
+                      Salvar
                     </>
                   )}
                 </Button>
@@ -482,9 +454,7 @@ const SettingsContent = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="text-lg">Dados do Escritório</CardTitle>
-              <CardDescription>
-                Informações do seu escritório de contabilidade.
-              </CardDescription>
+              <CardDescription>Informações do seu escritório de contabilidade.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -546,7 +516,7 @@ const SettingsContent = () => {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Salvar Dados
+                      Salvar
                     </>
                   )}
                 </Button>
@@ -587,9 +557,7 @@ const SettingsContent = () => {
             <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-lg">API InfoSimples</CardTitle>
-                <CardDescription>
-                  Token de integração para consultas de certidões.
-                </CardDescription>
+                <CardDescription>Token de integração para consultas de certidões.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-status-success/10 border border-status-success/30">
@@ -597,14 +565,12 @@ const SettingsContent = () => {
                     <CheckCircle className="w-8 h-8 text-status-success" />
                     <div>
                       <p className="font-medium text-status-success">Integração Ativa</p>
-                      <p className="text-sm text-muted-foreground">
-                        Token configurado e funcionando
-                      </p>
+                      <p className="text-sm text-muted-foreground">Token configurado e funcionando</p>
                     </div>
                   </div>
                   <Button variant="outline" onClick={() => setTokenDialogOpen(true)}>
                     <Key className="w-4 h-4 mr-2" />
-                    Atualizar Token
+                    Atualizar
                   </Button>
                 </div>
               </CardContent>
@@ -613,9 +579,7 @@ const SettingsContent = () => {
             <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-lg">WhatsApp Business</CardTitle>
-                <CardDescription>
-                  Integração para envio automático de alertas e documentos.
-                </CardDescription>
+                <CardDescription>Integração para envio automático de alertas e documentos.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
@@ -643,9 +607,7 @@ const SettingsContent = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Configurar Certificado A1</DialogTitle>
-            <DialogDescription>
-              Faça upload do seu certificado digital A1 (.pfx) e informe a senha.
-            </DialogDescription>
+            <DialogDescription>Faça upload do seu certificado digital A1 (.pfx) e informe a senha.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -663,7 +625,7 @@ const SettingsContent = () => {
             </Button>
             <Button onClick={handleConfigureCertificate}>
               <Upload className="w-4 h-4 mr-2" />
-              Enviar Certificado
+              Enviar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -674,9 +636,7 @@ const SettingsContent = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Atualizar Token InfoSimples</DialogTitle>
-            <DialogDescription>
-              Informe o novo token de acesso à API InfoSimples.
-            </DialogDescription>
+            <DialogDescription>Informe o novo token de acesso à API InfoSimples.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -703,7 +663,7 @@ const SettingsContent = () => {
                   Salvando...
                 </>
               ) : (
-                "Salvar Token"
+                "Salvar"
               )}
             </Button>
           </DialogFooter>
@@ -715,9 +675,7 @@ const SettingsContent = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Conectar WhatsApp Business</DialogTitle>
-            <DialogDescription>
-              Configure a integração com WhatsApp Business para envio de alertas.
-            </DialogDescription>
+            <DialogDescription>Configure a integração com WhatsApp Business para envio de alertas.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -736,9 +694,7 @@ const SettingsContent = () => {
             <Button variant="outline" onClick={() => setWhatsappDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleConnectWhatsapp}>
-              Conectar
-            </Button>
+            <Button onClick={handleConnectWhatsapp}>Conectar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
