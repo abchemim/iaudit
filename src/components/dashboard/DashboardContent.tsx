@@ -40,7 +40,39 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await queryClient.invalidateQueries();
+    // Use refetchQueries to wait for data to be actually refreshed
+    await queryClient.refetchQueries({
+      queryKey: ["fgts-stats"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["certificate-stats"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["declaration-stats"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["installment-stats"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["simples-limits"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["clients"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["tarefas-stats"],
+      type: "active",
+    });
+    await queryClient.refetchQueries({
+      queryKey: ["creditos-stats"],
+      type: "active",
+    });
     setIsRefreshing(false);
   };
 
