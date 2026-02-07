@@ -316,11 +316,14 @@ serve(async (req) => {
       );
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
     const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+    // SECURITY: Must pass token explicitly when verify_jwt=false (Lovable Cloud)
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
     if (userError || !user) {
       return new Response(
         JSON.stringify({ success: false, error: "Token inválido" }),
