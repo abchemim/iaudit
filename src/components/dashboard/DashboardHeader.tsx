@@ -92,10 +92,13 @@ const DashboardHeader = ({
       if (!searchQuery || searchQuery.length < 2) return [];
       const results: SearchResult[] = [];
 
+      // Sanitize search query to prevent SQL injection - escape special pattern characters
+      const sanitizedQuery = searchQuery.replace(/[%_\\]/g, '\\$&');
+
       // Search clients
       const {
         data: clients
-      } = await supabase.from("clients").select("id, company_name, trade_name, cnpj").or(`company_name.ilike.%${searchQuery}%,trade_name.ilike.%${searchQuery}%,cnpj.ilike.%${searchQuery}%`).limit(4);
+      } = await supabase.from("clients").select("id, company_name, trade_name, cnpj").or(`company_name.ilike.%${sanitizedQuery}%,trade_name.ilike.%${sanitizedQuery}%,cnpj.ilike.%${sanitizedQuery}%`).limit(4);
       if (clients) {
         clients.forEach(client => {
           results.push({
@@ -110,7 +113,7 @@ const DashboardHeader = ({
       // Search tasks
       const {
         data: tarefas
-      } = await supabase.from("tarefas").select("id, titulo, descricao").or(`titulo.ilike.%${searchQuery}%,descricao.ilike.%${searchQuery}%`).limit(3);
+      } = await supabase.from("tarefas").select("id, titulo, descricao").or(`titulo.ilike.%${sanitizedQuery}%,descricao.ilike.%${sanitizedQuery}%`).limit(3);
       if (tarefas) {
         tarefas.forEach(tarefa => {
           results.push({
