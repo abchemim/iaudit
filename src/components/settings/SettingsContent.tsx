@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, User, Bell, Shield, Database, Key, Building2, Loader2, Upload, CheckCircle, XCircle } from "lucide-react";
+import { Save, User, Bell, Shield, Key, Building2, Loader2, Upload, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentUserProfile, useUpdateUserProfile, ROLE_LABELS } from "@/hooks/useUserProfile";
+import { useCompanySettings, useUpdateCompanySettings } from "@/hooks/useCompanySettings";
+import { useNotificationSettings, useUpdateNotificationSettings } from "@/hooks/useNotificationSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -26,6 +28,14 @@ const SettingsContent = () => {
   const { toast } = useToast();
   const { data: profile, isLoading } = useCurrentUserProfile();
   const updateProfile = useUpdateUserProfile();
+  
+  // Company settings
+  const { data: companySettings, isLoading: isLoadingCompany } = useCompanySettings();
+  const updateCompanySettings = useUpdateCompanySettings();
+  
+  // Notification settings
+  const { data: notificationSettings, isLoading: isLoadingNotifications } = useNotificationSettings();
+  const updateNotificationSettings = useUpdateNotificationSettings();
   
   const [formData, setFormData] = useState({
     name: "",
@@ -46,7 +56,6 @@ const SettingsContent = () => {
     declarations: true,
     fgts: true,
   });
-  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
 
   const [companyData, setCompanyData] = useState({
     companyName: "",
@@ -55,7 +64,6 @@ const SettingsContent = () => {
     companyPhone: "",
     companyAddress: "",
   });
-  const [isSavingCompany, setIsSavingCompany] = useState(false);
 
   // Integration dialogs
   const [certificateDialogOpen, setCertificateDialogOpen] = useState(false);
@@ -73,6 +81,29 @@ const SettingsContent = () => {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (companySettings) {
+      setCompanyData({
+        companyName: companySettings.company_name || "",
+        companyCnpj: companySettings.company_cnpj || "",
+        crc: companySettings.crc || "",
+        companyPhone: companySettings.company_phone || "",
+        companyAddress: companySettings.company_address || "",
+      });
+    }
+  }, [companySettings]);
+
+  useEffect(() => {
+    if (notificationSettings) {
+      setNotifications({
+        email: notificationSettings.email_enabled,
+        whatsapp: notificationSettings.whatsapp_enabled,
+        certExpiry: notificationSettings.cert_expiry_alert,
+        declarations: notificationSettings.declarations_alert,
+        fgts: notificationSettings.fgts_alert,
+      });
+    }
+  }, [notificationSettings]);
   const handleSaveProfile = () => {
     updateProfile.mutate({
       name: formData.name,
@@ -123,26 +154,24 @@ const SettingsContent = () => {
     }
   };
 
-  const handleSaveNotifications = async () => {
-    setIsSavingNotifications(true);
-    // Simulating save - in a real app, this would save to a notifications_settings table
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast({
-      title: "Preferências salvas",
-      description: "Suas preferências de notificação foram atualizadas.",
+  const handleSaveNotifications = () => {
+    updateNotificationSettings.mutate({
+      email_enabled: notifications.email,
+      whatsapp_enabled: notifications.whatsapp,
+      cert_expiry_alert: notifications.certExpiry,
+      declarations_alert: notifications.declarations,
+      fgts_alert: notifications.fgts,
     });
-    setIsSavingNotifications(false);
   };
 
-  const handleSaveCompany = async () => {
-    setIsSavingCompany(true);
-    // Simulating save - in a real app, this would save to a company_settings table
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast({
-      title: "Dados salvos",
-      description: "Os dados do escritório foram atualizados.",
+  const handleSaveCompany = () => {
+    updateCompanySettings.mutate({
+      company_name: companyData.companyName,
+      company_cnpj: companyData.companyCnpj,
+      crc: companyData.crc,
+      company_phone: companyData.companyPhone,
+      company_address: companyData.companyAddress,
     });
-    setIsSavingCompany(false);
   };
 
   const handleSaveToken = async () => {
@@ -430,8 +459,8 @@ const SettingsContent = () => {
               </div>
 
               <div className="flex justify-end pt-4">
-                <Button onClick={handleSaveNotifications} disabled={isSavingNotifications}>
-                  {isSavingNotifications ? (
+                <Button onClick={handleSaveNotifications} disabled={updateNotificationSettings.isPending}>
+                  {updateNotificationSettings.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Salvando...
@@ -508,8 +537,8 @@ const SettingsContent = () => {
                 />
               </div>
               <div className="flex justify-end pt-4">
-                <Button onClick={handleSaveCompany} disabled={isSavingCompany}>
-                  {isSavingCompany ? (
+                <Button onClick={handleSaveCompany} disabled={updateCompanySettings.isPending}>
+                  {updateCompanySettings.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Salvando...
