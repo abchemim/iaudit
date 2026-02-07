@@ -2,14 +2,17 @@ import DonutChart from "./DonutChart";
 import ProcessBar from "./ProcessBar";
 import NotificationCard from "./NotificationCard";
 import StatsLegend from "./StatsLegend";
-import { ChevronRight, Building2, Users } from "lucide-react";
+import { ChevronRight, Building2, Users, ListTodo, CreditCard, AlertCircle } from "lucide-react";
 import { useFGTSStats } from "@/hooks/useFGTSRecords";
 import { useCertificateStats } from "@/hooks/useCertificates";
 import { useDeclarationStats } from "@/hooks/useDeclarations";
 import { useInstallmentStats } from "@/hooks/useInstallments";
 import { useSimplesLimits } from "@/hooks/useSimplesLimits";
 import { useClients } from "@/hooks/useClients";
+import { useTarefasStats } from "@/hooks/useTarefas";
+import { useCreditosStats } from "@/hooks/useCreditosInfosimples";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 const DashboardContent = () => {
   const { data: fgtsStats, isLoading: loadingFGTS } = useFGTSStats();
@@ -18,6 +21,8 @@ const DashboardContent = () => {
   const { data: instStats, isLoading: loadingInst } = useInstallmentStats();
   const { data: simplesLimits, isLoading: loadingSimples } = useSimplesLimits({ year: new Date().getFullYear() });
   const { data: clients } = useClients();
+  const { data: tarefasStats, isLoading: loadingTarefas } = useTarefasStats();
+  const { data: creditosStats, isLoading: loadingCreditos } = useCreditosStats();
 
   const isLoading = loadingFGTS || loadingCerts || loadingDecl || loadingInst;
 
@@ -261,6 +266,72 @@ const DashboardContent = () => {
               <p className="text-4xl font-bold text-primary">{clients?.length || 0}</p>
               <p className="text-sm text-muted-foreground mt-1">empresas cadastradas</p>
             </div>
+          </div>
+
+          {/* Tarefas Pendentes */}
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ListTodo className="w-5 h-5 text-primary" />
+                <h3 className="text-base font-medium text-foreground">Tarefas Pendentes</h3>
+              </div>
+              <button className="text-primary text-sm font-medium flex items-center gap-1 hover:underline">
+                Ver todas
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {loadingTarefas ? (
+              <Skeleton className="h-16 w-full" />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Pendentes</span>
+                  <Badge variant="secondary" className="font-bold">{tarefasStats?.pendente || 0}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Alta Prioridade</span>
+                  <Badge variant="destructive" className="font-bold">{tarefasStats?.alta || 0}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Em Andamento</span>
+                  <Badge className="bg-status-warning text-white font-bold">{tarefasStats?.em_andamento || 0}</Badge>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Créditos InfoSimples */}
+          <div className="glass-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-medium text-foreground">Créditos InfoSimples</h3>
+            </div>
+
+            {loadingCreditos ? (
+              <Skeleton className="h-20 w-full" />
+            ) : (
+              <div className="space-y-3">
+                {creditosStats?.saldoAtual !== null && (
+                  <div className="text-center p-3 bg-secondary/30 rounded-lg">
+                    <p className="text-2xl font-bold text-primary">{creditosStats?.saldoAtual}</p>
+                    <p className="text-xs text-muted-foreground">saldo disponível</p>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Últimos 30 dias</span>
+                  <span className="font-medium">{creditosStats?.totalCreditos || 0} créditos</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Custo estimado</span>
+                  <span className="font-medium">R$ {(creditosStats?.custoTotal || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Taxa de sucesso</span>
+                  <span className="font-medium text-status-ok">{(creditosStats?.taxaSucesso || 0).toFixed(0)}%</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
