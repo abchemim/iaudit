@@ -2,7 +2,7 @@ import DonutChart from "./DonutChart";
 import ProcessBar from "./ProcessBar";
 import NotificationCard from "./NotificationCard";
 import StatsLegend from "./StatsLegend";
-import { ChevronRight, Building2, Users, ListTodo, CreditCard, FileWarning } from "lucide-react";
+import { ChevronRight, Building2, Users, ListTodo, CreditCard, FileWarning, RefreshCw } from "lucide-react";
 import { useFGTSStats } from "@/hooks/useFGTSRecords";
 import { useCertificateStats } from "@/hooks/useCertificates";
 import { useDeclarationStats } from "@/hooks/useDeclarations";
@@ -15,12 +15,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface DashboardContentProps {
   onNavigate?: (tab: string) => void;
 }
 
 const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
   const { data: fgtsStats, isLoading: loadingFGTS } = useFGTSStats();
   const { data: certStats, isLoading: loadingCerts } = useCertificateStats();
   const { data: declStats, isLoading: loadingDecl } = useDeclarationStats();
@@ -31,6 +37,12 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
   const { data: creditosStats, isLoading: loadingCreditos } = useCreditosStats();
 
   const isLoading = loadingFGTS || loadingCerts || loadingDecl || loadingInst;
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries();
+    setIsRefreshing(false);
+  };
 
   // Navigation handler
   const handleNavigate = (tab: string) => {
@@ -118,11 +130,22 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
     <ScrollArea className="flex-1 h-[calc(100vh-4rem)]">
       <div className="p-4 md:p-6 space-y-6">
         {/* Page Header */}
-        <div>
-          <h2 className="text-lg md:text-xl font-semibold text-foreground">Pendências fiscais</h2>
-          <p className="text-xs md:text-sm text-muted-foreground">
-            Acompanhe seu monitoramento fiscal, tendo uma visão geral e uma visão por processo.
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg md:text-xl font-semibold text-foreground">Pendências fiscais</h2>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Acompanhe seu monitoramento fiscal, tendo uma visão geral e uma visão por processo.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="shrink-0"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
 
         {/* Main Grid Layout - Responsive */}
