@@ -44,12 +44,11 @@ const ClientsContent = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={handleRefresh}
             disabled={isRefetching}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
-            Atualizar
+            <RefreshCw className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
           </Button>
           <Button size="sm" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
