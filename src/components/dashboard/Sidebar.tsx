@@ -90,9 +90,9 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     >
       {/* Collapse Button - Floating on the edge */}
       <Button
-        variant="outline"
+        variant="secondary"
         size="icon"
-        className="absolute -right-3 top-5 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar-background shadow-md hover:bg-secondary"
+        className="absolute -right-3 top-5 z-50 h-6 w-6 rounded-full border border-border bg-card shadow-md hover:bg-secondary"
         onClick={() => setCollapsed(!collapsed)}
       >
         {collapsed ? (
