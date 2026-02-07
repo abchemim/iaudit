@@ -61,7 +61,7 @@ const Dashboard = () => {
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader activeTab={activeTab} />
+        <DashboardHeader activeTab={activeTab} onTabChange={setActiveTab} />
         
         <main className="flex-1 overflow-auto">
           {renderContent()}

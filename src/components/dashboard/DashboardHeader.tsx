@@ -1,9 +1,9 @@
-import { Bell, Search, LogOut, User, Check, Loader2 } from "lucide-react";
+import { Bell, Search, LogOut, User, Check, Loader2, Building2, ClipboardList, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,13 +21,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   useNotifications,
   useUnreadNotificationsCount,
   useMarkNotificationAsRead,
@@ -35,9 +28,19 @@ import {
 } from "@/hooks/useNotifications";
 import { useCurrentUserProfile, useUpdateUserProfile, ROLE_LABELS, UserRole } from "@/hooks/useUserProfile";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+
+interface SearchResult {
+  id: string;
+  type: "client" | "tarefa";
+  title: string;
+  subtitle: string;
+}
 
 interface DashboardHeaderProps {
   activeTab: string;
+  onTabChange?: (tab: string) => void;
 }
 
 const tabTitles: Record<string, string> = {
@@ -56,7 +59,7 @@ const tabTitles: Record<string, string> = {
   ajuda: "Ajuda",
 };
 
-const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
+const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -70,6 +73,82 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Search query
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ["global-search", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery || searchQuery.length < 2) return [];
+
+      const results: SearchResult[] = [];
+
+      // Search clients
+      const { data: clients } = await supabase
+        .from("clients")
+        .select("id, company_name, trade_name, cnpj")
+        .or(`company_name.ilike.%${searchQuery}%,trade_name.ilike.%${searchQuery}%,cnpj.ilike.%${searchQuery}%`)
+        .limit(5);
+
+      if (clients) {
+        clients.forEach((client) => {
+          results.push({
+            id: client.id,
+            type: "client",
+            title: client.trade_name || client.company_name,
+            subtitle: client.cnpj,
+          });
+        });
+      }
+
+      // Search tasks
+      const { data: tarefas } = await supabase
+        .from("tarefas")
+        .select("id, titulo, descricao")
+        .or(`titulo.ilike.%${searchQuery}%,descricao.ilike.%${searchQuery}%`)
+        .limit(5);
+
+      if (tarefas) {
+        tarefas.forEach((tarefa) => {
+          results.push({
+            id: tarefa.id,
+            type: "tarefa",
+            title: tarefa.titulo,
+            subtitle: tarefa.descricao || "Sem descrição",
+          });
+        });
+      }
+
+      return results;
+    },
+    enabled: searchQuery.length >= 2,
+    staleTime: 1000,
+  });
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    setSearchQuery("");
+    setShowResults(false);
+    if (result.type === "client") {
+      onTabChange?.("clientes");
+    } else if (result.type === "tarefa") {
+      onTabChange?.("tarefas");
+    }
+  };
 
   const openProfileDialog = () => {
     setProfileName(profile?.name || "");
@@ -108,13 +187,71 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
 
         <div className="flex items-center gap-4">
           {/* Search */}
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative hidden md:block" ref={searchRef}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
             <input
               type="text"
-              placeholder="Buscar..."
-              className="w-64 pl-10 pr-4 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Buscar clientes, tarefas..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+              className="w-72 pl-10 pr-8 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setShowResults(false);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Search Results Dropdown */}
+            {showResults && searchQuery.length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                {isSearching ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Buscando...
+                  </div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  <ScrollArea className="max-h-64">
+                    {searchResults.map((result) => (
+                      <button
+                        key={`${result.type}-${result.id}`}
+                        onClick={() => handleSearchResultClick(result)}
+                        className="w-full flex items-start gap-3 p-3 hover:bg-secondary/50 transition-colors text-left border-b border-border last:border-0"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          {result.type === "client" ? (
+                            <Building2 className="w-4 h-4 text-primary" />
+                          ) : (
+                            <ClipboardList className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{result.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
+                          {result.type === "client" ? "Cliente" : "Tarefa"}
+                        </span>
+                      </button>
+                    ))}
+                  </ScrollArea>
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    Nenhum resultado encontrado
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Notifications */}
