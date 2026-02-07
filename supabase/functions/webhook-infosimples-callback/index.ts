@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-webhook-secret",
 };
 
 // Edge function para receber callbacks da InfoSimples
@@ -16,6 +16,23 @@ serve(async (req) => {
   }
 
   try {
+    // Validate webhook secret for authentication
+    const WEBHOOK_SECRET = Deno.env.get("INFOSIMPLES_WEBHOOK_SECRET");
+    const providedSecret = req.headers.get("X-Webhook-Secret");
+
+    // If webhook secret is configured, validate it
+    if (WEBHOOK_SECRET && WEBHOOK_SECRET.length > 0) {
+      if (!providedSecret || providedSecret !== WEBHOOK_SECRET) {
+        console.error("Unauthorized webhook request - invalid or missing secret");
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+    } else {
+      console.warn("INFOSIMPLES_WEBHOOK_SECRET not configured - webhook authentication disabled");
+    }
+
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -28,11 +45,12 @@ serve(async (req) => {
     const payload = await req.json();
     console.log("Callback InfoSimples recebido:", JSON.stringify(payload));
 
+    // Validate required fields
     const { query_id, code, data, credits_used, message } = payload;
 
-    if (!query_id) {
+    if (!query_id || typeof query_id !== "string") {
       return new Response(
-        JSON.stringify({ received: false, error: "query_id não fornecido" }),
+        JSON.stringify({ received: false, error: "query_id inválido ou não fornecido" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
