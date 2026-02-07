@@ -160,6 +160,53 @@ export type Database = {
           },
         ]
       }
+      cnd_consultas_jobs: {
+        Row: {
+          client_id: string
+          created_at: string
+          error: string | null
+          id: string
+          progress: number | null
+          result: Json | null
+          status: string
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          progress?: number | null
+          result?: Json | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          progress?: number | null
+          result?: Json | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cnd_consultas_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           company_address: string | null
