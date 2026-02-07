@@ -594,9 +594,11 @@ export type Database = {
           cert_expiry_alert: boolean | null
           created_at: string
           declarations_alert: boolean | null
+          dias_antecedencia_tarefas: number | null
           email_enabled: boolean | null
           fgts_alert: boolean | null
           id: string
+          tarefas_alert: boolean | null
           updated_at: string
           user_id: string
           whatsapp_enabled: boolean | null
@@ -605,9 +607,11 @@ export type Database = {
           cert_expiry_alert?: boolean | null
           created_at?: string
           declarations_alert?: boolean | null
+          dias_antecedencia_tarefas?: number | null
           email_enabled?: boolean | null
           fgts_alert?: boolean | null
           id?: string
+          tarefas_alert?: boolean | null
           updated_at?: string
           user_id: string
           whatsapp_enabled?: boolean | null
@@ -616,9 +620,11 @@ export type Database = {
           cert_expiry_alert?: boolean | null
           created_at?: string
           declarations_alert?: boolean | null
+          dias_antecedencia_tarefas?: number | null
           email_enabled?: boolean | null
           fgts_alert?: boolean | null
           id?: string
+          tarefas_alert?: boolean | null
           updated_at?: string
           user_id?: string
           whatsapp_enabled?: boolean | null

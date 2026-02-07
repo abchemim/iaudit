@@ -11,6 +11,8 @@ export interface NotificationSettings {
   cert_expiry_alert: boolean;
   declarations_alert: boolean;
   fgts_alert: boolean;
+  tarefas_alert: boolean;
+  dias_antecedencia_tarefas: number;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +23,8 @@ export interface NotificationSettingsUpdate {
   cert_expiry_alert?: boolean;
   declarations_alert?: boolean;
   fgts_alert?: boolean;
+  tarefas_alert?: boolean;
+  dias_antecedencia_tarefas?: number;
 }
 
 export const useNotificationSettings = () => {
