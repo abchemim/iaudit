@@ -16,7 +16,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const DashboardContent = () => {
+interface DashboardContentProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
   const { data: fgtsStats, isLoading: loadingFGTS } = useFGTSStats();
   const { data: certStats, isLoading: loadingCerts } = useCertificateStats();
   const { data: declStats, isLoading: loadingDecl } = useDeclarationStats();
@@ -27,6 +31,13 @@ const DashboardContent = () => {
   const { data: creditosStats, isLoading: loadingCreditos } = useCreditosStats();
 
   const isLoading = loadingFGTS || loadingCerts || loadingDecl || loadingInst;
+
+  // Navigation handler
+  const handleNavigate = (tab: string) => {
+    if (onNavigate) {
+      onNavigate(tab);
+    }
+  };
 
   // Aggregate stats
   const totalOk = (fgtsStats?.ok || 0) + (certStats?.ok || 0) + (declStats?.ok || 0) + (instStats?.ok || 0);
@@ -45,24 +56,28 @@ const DashboardContent = () => {
   const processData = [
     { 
       label: "FGTS Digital", 
+      tab: "fgts",
       ok: fgtsStats?.ok || 0, 
       warning: (fgtsStats?.pending || 0) + (fgtsStats?.attention || 0), 
       danger: fgtsStats?.expired || 0 
     },
     { 
       label: "Certidões", 
+      tab: "certidoes",
       ok: certStats?.ok || 0, 
       warning: (certStats?.pending || 0) + (certStats?.attention || 0), 
       danger: certStats?.expired || 0 
     },
     { 
       label: "Declarações", 
+      tab: "declaracoes",
       ok: declStats?.ok || 0, 
       warning: (declStats?.pending || 0) + (declStats?.attention || 0), 
       danger: declStats?.expired || 0 
     },
     { 
       label: "Parcelamentos", 
+      tab: "parcelamentos",
       ok: instStats?.ok || 0, 
       warning: (instStats?.pending || 0) + (instStats?.attention || 0), 
       danger: instStats?.expired || 0 
@@ -73,19 +88,30 @@ const DashboardContent = () => {
   const topSimplesLimits = simplesLimits?.slice(0, 5) || [];
 
   const absenceData = [
-    { label: "Declarações pendentes", missing: declStats?.pending || 0, total: declStats?.total || 0 },
-    { label: "Certidões vencidas", missing: certStats?.expired || 0, total: certStats?.total || 0 },
+    { label: "Declarações pendentes", tab: "declaracoes", missing: declStats?.pending || 0, total: declStats?.total || 0 },
+    { label: "Certidões vencidas", tab: "certidoes", missing: certStats?.expired || 0, total: certStats?.total || 0 },
   ];
 
-  const notifications: { company: string; message: string; type: "success" | "warning" | "danger" }[] = [
-    ...(fgtsStats?.expired && fgtsStats.expired > 0 ? [{ company: "FGTS Digital", message: `${fgtsStats.expired} guia(s) vencida(s)`, type: "danger" as const }] : []),
-    ...(certStats?.expired && certStats.expired > 0 ? [{ company: "Certidões", message: `${certStats.expired} certidão(ões) vencida(s)`, type: "danger" as const }] : []),
-    ...(declStats?.attention && declStats.attention > 0 ? [{ company: "Declarações", message: `${declStats.attention} declaração(ões) com atenção`, type: "warning" as const }] : []),
-    ...(instStats?.attention && instStats.attention > 0 ? [{ company: "Parcelamentos", message: `${instStats.attention} parcelamento(s) com atenção`, type: "warning" as const }] : []),
+  // Map notification types to tabs
+  const getNotificationTab = (company: string): string => {
+    switch (company) {
+      case "FGTS Digital": return "fgts";
+      case "Certidões": return "certidoes";
+      case "Declarações": return "declaracoes";
+      case "Parcelamentos": return "parcelamentos";
+      default: return "dashboard";
+    }
+  };
+
+  const notifications: { company: string; message: string; type: "success" | "warning" | "danger"; tab: string }[] = [
+    ...(fgtsStats?.expired && fgtsStats.expired > 0 ? [{ company: "FGTS Digital", message: `${fgtsStats.expired} guia(s) vencida(s)`, type: "danger" as const, tab: "fgts" }] : []),
+    ...(certStats?.expired && certStats.expired > 0 ? [{ company: "Certidões", message: `${certStats.expired} certidão(ões) vencida(s)`, type: "danger" as const, tab: "certidoes" }] : []),
+    ...(declStats?.attention && declStats.attention > 0 ? [{ company: "Declarações", message: `${declStats.attention} declaração(ões) com atenção`, type: "warning" as const, tab: "declaracoes" }] : []),
+    ...(instStats?.attention && instStats.attention > 0 ? [{ company: "Parcelamentos", message: `${instStats.attention} parcelamento(s) com atenção`, type: "warning" as const, tab: "parcelamentos" }] : []),
   ];
 
   if (notifications.length === 0) {
-    notifications.push({ company: "Sistema", message: "Nenhuma pendência urgente", type: "success" });
+    notifications.push({ company: "Sistema", message: "Nenhuma pendência urgente", type: "success", tab: "dashboard" });
   }
 
   return (
@@ -156,6 +182,7 @@ const DashboardContent = () => {
                           okCount={process.ok}
                           warningCount={process.warning}
                           dangerCount={process.danger}
+                          onClick={() => handleNavigate(process.tab)}
                         />
                       ))}
                     </div>
@@ -173,7 +200,10 @@ const DashboardContent = () => {
                     Acompanhe os sublimites dos seus clientes no Simples Nacional.
                   </p>
                 </div>
-                <button className="text-primary text-sm font-medium flex items-center gap-1 hover:underline self-start sm:self-center">
+                <button 
+                  onClick={() => handleNavigate("simples")}
+                  className="text-primary text-sm font-medium flex items-center gap-1 hover:underline self-start sm:self-center"
+                >
                   Ver todos
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -191,7 +221,11 @@ const DashboardContent = () => {
                     const percentage = limit.percentage_used || 0;
                     const color = percentage >= 100 ? "hsl(0, 84%, 60%)" : percentage >= 80 ? "hsl(38, 92%, 50%)" : "hsl(142, 71%, 45%)";
                     return (
-                      <div key={limit.id} className="text-center p-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors">
+                      <button
+                        key={limit.id} 
+                        onClick={() => handleNavigate("simples")}
+                        className="text-center p-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors cursor-pointer"
+                      >
                         <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-2">
                           <DonutChart
                             data={[
@@ -204,7 +238,7 @@ const DashboardContent = () => {
                         <p className="text-xs text-muted-foreground truncate px-1">
                           {limit.clients?.company_name || `Cliente ${i + 1}`}
                         </p>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -236,6 +270,7 @@ const DashboardContent = () => {
                     company={notification.company}
                     message={notification.message}
                     type={notification.type}
+                    onClick={() => handleNavigate(notification.tab)}
                   />
                 ))}
               </div>
@@ -253,6 +288,7 @@ const DashboardContent = () => {
                 {absenceData.map((item) => (
                   <button
                     key={item.label}
+                    onClick={() => handleNavigate(item.tab)}
                     className="w-full flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors group"
                   >
                     <span className="text-sm font-medium text-foreground">{item.label}</span>
@@ -275,7 +311,10 @@ const DashboardContent = () => {
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
               {/* Active Clients */}
-              <Card className="glass-card p-4 text-center">
+              <Card 
+                className="glass-card p-4 text-center cursor-pointer hover:bg-secondary/30 transition-colors"
+                onClick={() => handleNavigate("clientes")}
+              >
                 <h3 className="text-xs font-medium text-muted-foreground mb-2">Clientes Ativos</h3>
                 <p className="text-2xl md:text-3xl font-bold text-primary">{clients?.length || 0}</p>
                 <p className="text-xs text-muted-foreground mt-1">empresas</p>
@@ -304,7 +343,10 @@ const DashboardContent = () => {
                   <ListTodo className="w-4 h-4 text-primary" />
                   <h3 className="text-sm font-medium text-foreground">Tarefas Pendentes</h3>
                 </div>
-                <button className="text-primary text-xs font-medium flex items-center gap-1 hover:underline">
+                <button 
+                  onClick={() => handleNavigate("configuracoes")}
+                  className="text-primary text-xs font-medium flex items-center gap-1 hover:underline"
+                >
                   Ver todas
                   <ChevronRight className="w-3 h-3" />
                 </button>
