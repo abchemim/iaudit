@@ -4,7 +4,7 @@ import NotificationCard from "./NotificationCard";
 import StatsLegend from "./StatsLegend";
 import { ChevronRight, Building2, Users, ListTodo, CreditCard, FileWarning, RefreshCw } from "lucide-react";
 import { useFGTSStats } from "@/hooks/useFGTSRecords";
-import { useCertificateStats } from "@/hooks/useCertificates";
+import { useCndStats } from "@/hooks/useCndCertidoes";
 import { useDeclarationStats } from "@/hooks/useDeclarations";
 import { useInstallmentStats } from "@/hooks/useInstallments";
 import { useSimplesLimits } from "@/hooks/useSimplesLimits";
@@ -28,7 +28,7 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { data: fgtsStats, isLoading: loadingFGTS } = useFGTSStats();
-  const { data: certStats, isLoading: loadingCerts } = useCertificateStats();
+  const { data: cndStats, isLoading: loadingCnds } = useCndStats();
   const { data: declStats, isLoading: loadingDecl } = useDeclarationStats();
   const { data: instStats, isLoading: loadingInst } = useInstallmentStats();
   const { data: simplesLimits, isLoading: loadingSimples } = useSimplesLimits({ year: new Date().getFullYear() });
@@ -36,7 +36,16 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
   const { data: tarefasStats, isLoading: loadingTarefas } = useTarefasStats();
   const { data: creditosStats, isLoading: loadingCreditos } = useCreditosStats();
 
-  const isLoading = loadingFGTS || loadingCerts || loadingDecl || loadingInst;
+  const isLoading = loadingFGTS || loadingCnds || loadingDecl || loadingInst;
+  
+  // Map CND stats to expected format (valida->ok, vencendo->attention, vencida->expired, pendente->pending)
+  const certStats = cndStats ? {
+    total: cndStats.total,
+    ok: cndStats.valida,
+    pending: cndStats.pendente,
+    attention: cndStats.vencendo,
+    expired: cndStats.vencida,
+  } : undefined;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -46,7 +55,7 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
       type: "active",
     });
     await queryClient.refetchQueries({
-      queryKey: ["certificate-stats"],
+      queryKey: ["cnd-stats"],
       type: "active",
     });
     await queryClient.refetchQueries({
