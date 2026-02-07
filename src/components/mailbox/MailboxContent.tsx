@@ -3,13 +3,7 @@ import { RefreshCw, Mail, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxMessages, useMailboxStats, useUpdateMailboxMessage } from "@/hooks/useMailbox";
@@ -19,10 +13,12 @@ const MailboxContent = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const queryClient = useQueryClient();
-  
-  const { data: messages, isLoading, isRefetching } = useMailboxMessages(
-    statusFilter !== "all" ? { status: statusFilter as "unread" | "read" } : undefined
-  );
+
+  const {
+    data: messages,
+    isLoading,
+    isRefetching,
+  } = useMailboxMessages(statusFilter !== "all" ? { status: statusFilter as "unread" | "read" } : undefined);
   const { data: stats } = useMailboxStats();
   const updateMessage = useUpdateMailboxMessage();
 
@@ -35,18 +31,19 @@ const MailboxContent = () => {
     updateMessage.mutate({ id, status: "read" });
   };
 
-  const filteredMessages = messages?.filter((msg) => {
-    if (search) {
-      const searchLower = search.toLowerCase();
-      return (
-        msg.client?.company_name.toLowerCase().includes(searchLower) ||
-        msg.client?.trade_name?.toLowerCase().includes(searchLower) ||
-        msg.subject.toLowerCase().includes(searchLower) ||
-        msg.client?.cnpj.includes(search)
-      );
-    }
-    return true;
-  }) || [];
+  const filteredMessages =
+    messages?.filter((msg) => {
+      if (search) {
+        const searchLower = search.toLowerCase();
+        return (
+          msg.client?.company_name.toLowerCase().includes(searchLower) ||
+          msg.client?.trade_name?.toLowerCase().includes(searchLower) ||
+          msg.subject.toLowerCase().includes(searchLower) ||
+          msg.client?.cnpj.includes(search)
+        );
+      }
+      return true;
+    }) || [];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -76,17 +73,10 @@ const MailboxContent = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-foreground">Caixas Postais</h2>
-          <p className="text-sm text-muted-foreground">
-            Monitore as caixas postais do e-CAC e SEFAZ de seus clientes.
-          </p>
+          <p className="text-sm text-muted-foreground">Monitore as caixas postais do e-CAC e SEFAZ de seus clientes.</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={isRefetching}
-        >
+        <Button variant="outline" onClick={handleRefresh} disabled={isRefetching}>
           <RefreshCw className={`w-4 h-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
-          Sincronizar
         </Button>
       </div>
 
@@ -168,9 +158,7 @@ const MailboxContent = () => {
           <div className="p-8 text-center text-muted-foreground">
             <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhuma mensagem encontrada.</p>
-            <p className="text-sm mt-1">
-              As mensagens do e-CAC e SEFAZ aparecerão aqui quando sincronizadas.
-            </p>
+            <p className="text-sm mt-1">As mensagens do e-CAC e SEFAZ aparecerão aqui quando sincronizadas.</p>
           </div>
         ) : (
           filteredMessages.map((message) => (
@@ -182,17 +170,17 @@ const MailboxContent = () => {
               onClick={() => message.status === "unread" && handleMarkAsRead(message.id)}
             >
               <div className="flex items-start gap-4">
-                <div className={`w-2 h-2 rounded-full mt-2 ${
-                  message.status === "unread" ? "bg-primary" : "bg-transparent"
-                }`} />
+                <div
+                  className={`w-2 h-2 rounded-full mt-2 ${
+                    message.status === "unread" ? "bg-primary" : "bg-transparent"
+                  }`}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-foreground truncate">
                       {message.client?.trade_name || message.client?.company_name || "—"}
                     </span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {message.client?.cnpj}
-                    </span>
+                    <span className="text-xs text-muted-foreground font-mono">{message.client?.cnpj}</span>
                   </div>
                   <p className="text-sm text-foreground truncate">{message.subject}</p>
                   <div className="flex items-center gap-2 mt-2">
@@ -221,9 +209,9 @@ const MailboxContent = () => {
             <div>
               <p className="font-medium text-foreground">Integração com e-CAC</p>
               <p className="text-sm text-muted-foreground">
-                Para sincronização automática das caixas postais, é necessário configurar o certificado A1 
-                de cada cliente na área de configurações. A integração permite monitoramento 24h das mensagens 
-                da Receita Federal e SEFAZ.
+                Para sincronização automática das caixas postais, é necessário configurar o certificado A1 de cada
+                cliente na área de configurações. A integração permite monitoramento 24h das mensagens da Receita
+                Federal e SEFAZ.
               </p>
             </div>
           </div>
