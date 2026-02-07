@@ -19,7 +19,7 @@ const Dashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardContent />;
+        return <DashboardContent onNavigate={setActiveTab} />;
       case "fgts":
         return <FGTSContent />;
       case "certidoes":
