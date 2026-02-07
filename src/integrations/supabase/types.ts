@@ -841,7 +841,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      relatorio_creditos: {
+        Row: {
+          custo_total: number | null
+          data: string | null
+          tipo_consulta: string | null
+          total_consultas: number | null
+          total_creditos: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
