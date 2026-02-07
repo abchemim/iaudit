@@ -12,6 +12,7 @@ import MailboxContent from "@/components/mailbox/MailboxContent";
 import UsersContent from "@/components/users/UsersContent";
 import SettingsContent from "@/components/settings/SettingsContent";
 import HelpContent from "@/components/help/HelpContent";
+import TarefasContent from "@/components/tarefas/TarefasContent";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -38,6 +39,8 @@ const Dashboard = () => {
         return <UsersContent />;
       case "configuracoes":
         return <SettingsContent />;
+      case "tarefas":
+        return <TarefasContent />;
       case "ajuda":
         return <HelpContent />;
       default:

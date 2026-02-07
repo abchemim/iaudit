@@ -14,6 +14,7 @@ import {
   Mail,
   Users,
   FolderOpen,
+  ListTodo,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   ];
 
   const bottomMenuItems = [
+    { id: "tarefas", icon: ListTodo, label: "Tarefas" },
     { id: "usuarios", icon: Users, label: "Usuários" },
     { id: "configuracoes", icon: Settings, label: "Configurações" },
     { id: "ajuda", icon: HelpCircle, label: "Ajuda" },

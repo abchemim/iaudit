@@ -149,6 +149,43 @@ export const useUpdateTarefa = () => {
   });
 };
 
+export const useCreateTarefa = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (tarefa: Omit<Tarefa, "id" | "created_at" | "updated_at" | "clients" | "concluido_em">) => {
+      const { data, error } = await supabase
+        .from("tarefas")
+        .insert({
+          ...tarefa,
+          user_id: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tarefas"] });
+      queryClient.invalidateQueries({ queryKey: ["tarefas-stats"] });
+      toast({
+        title: "Tarefa criada",
+        description: "A tarefa foi criada com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar tarefa",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
 export const useDeleteTarefa = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
