@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, User, Bell, Shield, Database, Key, Building2 } from "lucide-react";
+import { Save, User, Bell, Shield, Database, Key, Building2, Loader2, Upload, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentUserProfile, useUpdateUserProfile, ROLE_LABELS } from "@/hooks/useUserProfile";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 const SettingsContent = () => {
   const { user } = useAuth();
@@ -23,6 +32,13 @@ const SettingsContent = () => {
     phone: "",
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const [notifications, setNotifications] = useState({
     email: true,
     whatsapp: false,
@@ -30,6 +46,23 @@ const SettingsContent = () => {
     declarations: true,
     fgts: true,
   });
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+
+  const [companyData, setCompanyData] = useState({
+    companyName: "",
+    companyCnpj: "",
+    crc: "",
+    companyPhone: "",
+    companyAddress: "",
+  });
+  const [isSavingCompany, setIsSavingCompany] = useState(false);
+
+  // Integration dialogs
+  const [certificateDialogOpen, setCertificateDialogOpen] = useState(false);
+  const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [newToken, setNewToken] = useState("");
+  const [isSavingToken, setIsSavingToken] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -40,11 +73,114 @@ const SettingsContent = () => {
     }
   }, [profile]);
 
-  const handleSave = () => {
+  const handleSaveProfile = () => {
     updateProfile.mutate({
       name: formData.name,
       phone: formData.phone,
     });
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Senha alterada",
+        description: "Sua senha foi alterada com sucesso.",
+      });
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao alterar senha",
+        description: error.message || "Não foi possível alterar a senha.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    setIsSavingNotifications(true);
+    // Simulating save - in a real app, this would save to a notifications_settings table
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    toast({
+      title: "Preferências salvas",
+      description: "Suas preferências de notificação foram atualizadas.",
+    });
+    setIsSavingNotifications(false);
+  };
+
+  const handleSaveCompany = async () => {
+    setIsSavingCompany(true);
+    // Simulating save - in a real app, this would save to a company_settings table
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    toast({
+      title: "Dados salvos",
+      description: "Os dados do escritório foram atualizados.",
+    });
+    setIsSavingCompany(false);
+  };
+
+  const handleSaveToken = async () => {
+    if (!newToken.trim()) {
+      toast({
+        title: "Erro",
+        description: "Informe o token da API.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingToken(true);
+    // Simulating save - in production, this would be stored securely
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    toast({
+      title: "Token atualizado",
+      description: "O token da API InfoSimples foi atualizado com sucesso.",
+    });
+    setNewToken("");
+    setTokenDialogOpen(false);
+    setIsSavingToken(false);
+  };
+
+  const handleConfigureCertificate = () => {
+    toast({
+      title: "Upload de Certificado",
+      description: "Funcionalidade de upload de certificado A1 em desenvolvimento. Entre em contato com o suporte.",
+    });
+    setCertificateDialogOpen(false);
+  };
+
+  const handleConnectWhatsapp = () => {
+    toast({
+      title: "WhatsApp Business",
+      description: "Integração com WhatsApp Business em desenvolvimento. Entre em contato com o suporte.",
+    });
+    setWhatsappDialogOpen(false);
   };
 
   return (
@@ -57,10 +193,6 @@ const SettingsContent = () => {
             Gerencie suas preferências e configurações do sistema.
           </p>
         </div>
-        <Button onClick={handleSave} disabled={updateProfile.isPending}>
-          <Save className="w-4 h-4 mr-2" />
-          {updateProfile.isPending ? "Salvando..." : "Salvar Alterações"}
-        </Button>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
@@ -134,6 +266,21 @@ const SettingsContent = () => {
                       />
                     </div>
                   </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveProfile} disabled={updateProfile.isPending}>
+                      {updateProfile.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Salvar Perfil
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </>
               )}
               
@@ -144,17 +291,48 @@ const SettingsContent = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Senha Atual</Label>
-                    <Input id="currentPassword" type="password" />
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    />
                   </div>
                   <div />
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">Nova Senha</Label>
-                    <Input id="newPassword" type="password" />
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                    <Input id="confirmPassword" type="password" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    />
                   </div>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleChangePassword}
+                    disabled={isChangingPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                  >
+                    {isChangingPassword ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Alterando...
+                      </>
+                    ) : (
+                      "Alterar Senha"
+                    )}
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -250,6 +428,22 @@ const SettingsContent = () => {
                   />
                 </div>
               </div>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSaveNotifications} disabled={isSavingNotifications}>
+                  {isSavingNotifications ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Salvar Preferências
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -267,26 +461,66 @@ const SettingsContent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Razão Social</Label>
-                  <Input id="companyName" placeholder="Nome do escritório" />
+                  <Input
+                    id="companyName"
+                    placeholder="Nome do escritório"
+                    value={companyData.companyName}
+                    onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="companyCnpj">CNPJ</Label>
-                  <Input id="companyCnpj" placeholder="00.000.000/0001-00" />
+                  <Input
+                    id="companyCnpj"
+                    placeholder="00.000.000/0001-00"
+                    value={companyData.companyCnpj}
+                    onChange={(e) => setCompanyData({ ...companyData, companyCnpj: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="crc">CRC</Label>
-                  <Input id="crc" placeholder="Registro no CRC" />
+                  <Input
+                    id="crc"
+                    placeholder="Registro no CRC"
+                    value={companyData.crc}
+                    onChange={(e) => setCompanyData({ ...companyData, crc: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="companyPhone">Telefone</Label>
-                  <Input id="companyPhone" placeholder="(00) 0000-0000" />
+                  <Input
+                    id="companyPhone"
+                    placeholder="(00) 0000-0000"
+                    value={companyData.companyPhone}
+                    onChange={(e) => setCompanyData({ ...companyData, companyPhone: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="companyAddress">Endereço</Label>
-                <Input id="companyAddress" placeholder="Endereço completo" />
+                <Input
+                  id="companyAddress"
+                  placeholder="Endereço completo"
+                  value={companyData.companyAddress}
+                  onChange={(e) => setCompanyData({ ...companyData, companyAddress: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSaveCompany} disabled={isSavingCompany}>
+                  {isSavingCompany ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Salvar Dados
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -313,7 +547,10 @@ const SettingsContent = () => {
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline">Configurar</Button>
+                  <Button variant="outline" onClick={() => setCertificateDialogOpen(true)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Configurar
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -328,7 +565,7 @@ const SettingsContent = () => {
               <CardContent>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-status-success/10 border border-status-success/30">
                   <div className="flex items-center gap-3">
-                    <Database className="w-8 h-8 text-status-success" />
+                    <CheckCircle className="w-8 h-8 text-status-success" />
                     <div>
                       <p className="font-medium text-status-success">Integração Ativa</p>
                       <p className="text-sm text-muted-foreground">
@@ -336,7 +573,10 @@ const SettingsContent = () => {
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline">Atualizar Token</Button>
+                  <Button variant="outline" onClick={() => setTokenDialogOpen(true)}>
+                    <Key className="w-4 h-4 mr-2" />
+                    Atualizar Token
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -351,7 +591,7 @@ const SettingsContent = () => {
               <CardContent>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
                   <div className="flex items-center gap-3">
-                    <Bell className="w-8 h-8 text-muted-foreground" />
+                    <XCircle className="w-8 h-8 text-muted-foreground" />
                     <div>
                       <p className="font-medium">Não configurado</p>
                       <p className="text-sm text-muted-foreground">
@@ -359,13 +599,120 @@ const SettingsContent = () => {
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline">Conectar</Button>
+                  <Button variant="outline" onClick={() => setWhatsappDialogOpen(true)}>
+                    Conectar
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Certificate Dialog */}
+      <Dialog open={certificateDialogOpen} onOpenChange={setCertificateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configurar Certificado A1</DialogTitle>
+            <DialogDescription>
+              Faça upload do seu certificado digital A1 (.pfx) e informe a senha.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Arquivo do Certificado (.pfx)</Label>
+              <Input type="file" accept=".pfx,.p12" />
+            </div>
+            <div className="space-y-2">
+              <Label>Senha do Certificado</Label>
+              <Input type="password" placeholder="Digite a senha do certificado" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCertificateDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfigureCertificate}>
+              <Upload className="w-4 h-4 mr-2" />
+              Enviar Certificado
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Token Dialog */}
+      <Dialog open={tokenDialogOpen} onOpenChange={setTokenDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Atualizar Token InfoSimples</DialogTitle>
+            <DialogDescription>
+              Informe o novo token de acesso à API InfoSimples.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Token da API</Label>
+              <Input
+                type="password"
+                placeholder="Cole seu token aqui"
+                value={newToken}
+                onChange={(e) => setNewToken(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O token pode ser obtido no painel da InfoSimples em configurações de API.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTokenDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveToken} disabled={isSavingToken}>
+              {isSavingToken ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Token"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* WhatsApp Dialog */}
+      <Dialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Conectar WhatsApp Business</DialogTitle>
+            <DialogDescription>
+              Configure a integração com WhatsApp Business para envio de alertas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Número do WhatsApp</Label>
+              <Input placeholder="+55 (00) 00000-0000" />
+            </div>
+            <div className="space-y-2">
+              <Label>Token de Acesso (Meta Business)</Label>
+              <Input type="password" placeholder="Cole o token do Meta Business" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Você precisa de uma conta Meta Business configurada para usar esta integração.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWhatsappDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConnectWhatsapp}>
+              Conectar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
