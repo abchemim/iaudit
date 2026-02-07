@@ -103,7 +103,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       </Button>
 
       {/* Logo */}
-      <div className="p-4 border-b border-sidebar-border">
+      <div className="h-16 px-4 border-b border-sidebar-border flex items-center">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
             <Shield className="w-5 h-5 text-primary" />
