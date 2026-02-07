@@ -213,6 +213,42 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          company_address: string | null
+          company_cnpj: string | null
+          company_name: string | null
+          company_phone: string | null
+          crc: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_address?: string | null
+          company_cnpj?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          crc?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_address?: string | null
+          company_cnpj?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          crc?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       configuracoes_alertas: {
         Row: {
           alerta_cnd_vencimento: boolean | null
@@ -605,6 +641,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_settings: {
+        Row: {
+          cert_expiry_alert: boolean | null
+          created_at: string
+          declarations_alert: boolean | null
+          email_enabled: boolean | null
+          fgts_alert: boolean | null
+          id: string
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean | null
+        }
+        Insert: {
+          cert_expiry_alert?: boolean | null
+          created_at?: string
+          declarations_alert?: boolean | null
+          email_enabled?: boolean | null
+          fgts_alert?: boolean | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean | null
+        }
+        Update: {
+          cert_expiry_alert?: boolean | null
+          created_at?: string
+          declarations_alert?: boolean | null
+          email_enabled?: boolean | null
+          fgts_alert?: boolean | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
