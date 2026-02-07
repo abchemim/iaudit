@@ -55,6 +55,8 @@ const SettingsContent = () => {
     certExpiry: true,
     declarations: true,
     fgts: true,
+    tarefas: true,
+    diasAntecedenciaTarefas: 3,
   });
 
   const [companyData, setCompanyData] = useState({
@@ -101,6 +103,8 @@ const SettingsContent = () => {
         certExpiry: notificationSettings.cert_expiry_alert,
         declarations: notificationSettings.declarations_alert,
         fgts: notificationSettings.fgts_alert,
+        tarefas: notificationSettings.tarefas_alert ?? true,
+        diasAntecedenciaTarefas: notificationSettings.dias_antecedencia_tarefas ?? 3,
       });
     }
   }, [notificationSettings]);
@@ -161,6 +165,8 @@ const SettingsContent = () => {
       cert_expiry_alert: notifications.certExpiry,
       declarations_alert: notifications.declarations,
       fgts_alert: notifications.fgts,
+      tarefas_alert: notifications.tarefas,
+      dias_antecedencia_tarefas: notifications.diasAntecedenciaTarefas,
     });
   };
 
@@ -428,6 +434,32 @@ const SettingsContent = () => {
                     onCheckedChange={(checked) => setNotifications({ ...notifications, fgts: checked })}
                   />
                 </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Tarefas</p>
+                    <p className="text-sm text-muted-foreground">Alertar sobre tarefas próximas do vencimento</p>
+                  </div>
+                  <Switch
+                    checked={notifications.tarefas}
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, tarefas: checked })}
+                  />
+                </div>
+                {notifications.tarefas && (
+                  <div className="flex items-center justify-between pl-4 border-l-2 border-primary/20">
+                    <div>
+                      <p className="font-medium">Dias de Antecedência</p>
+                      <p className="text-sm text-muted-foreground">Quantos dias antes do vencimento alertar</p>
+                    </div>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={notifications.diasAntecedenciaTarefas}
+                      onChange={(e) => setNotifications({ ...notifications, diasAntecedenciaTarefas: parseInt(e.target.value) || 3 })}
+                      className="w-20"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end pt-4">
