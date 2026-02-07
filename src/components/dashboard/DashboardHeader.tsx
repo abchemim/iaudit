@@ -50,6 +50,7 @@ const tabTitles: Record<string, string> = {
   parcelamentos: "Parcelamentos",
   certidoes: "Certidões",
   caixaspostais: "Caixas Postais",
+  tarefas: "Tarefas",
   usuarios: "Usuários",
   configuracoes: "Configurações",
   ajuda: "Ajuda",
