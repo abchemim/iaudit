@@ -74,7 +74,7 @@ serve(async (req) => {
       );
     }
 
-    // Formatar tipo
+  // Formatar tipo
     const tipoFormatado = 
       tipo === "federal" ? "Federal (PGFN)" : 
       tipo === "fgts" ? "FGTS (Caixa)" : 
@@ -94,6 +94,23 @@ serve(async (req) => {
       message: `A CND ${tipoFormatado} da empresa ${client.company_name} (${client.cnpj}) vence em ${dias_vencimento} dias.`,
     });
 
+    // Criar tarefa de renovação
+    const vencimentoData = new Date();
+    vencimentoData.setDate(vencimentoData.getDate() + dias_vencimento);
+    
+    await supabase.from("tarefas").insert({
+      client_id: client_id,
+      user_id: client.user_id,
+      titulo: `Renovar CND ${tipoFormatado}`,
+      descricao: `A CND ${tipoFormatado} da empresa ${client.company_name} vence em ${dias_vencimento} dias. É necessário verificar a regularidade fiscal e emitir nova certidão.`,
+      tipo: "verificacao",
+      relacionado_tipo: "cnd",
+      relacionado_id: cnd_id,
+      prioridade,
+      status: "pendente",
+      vencimento: vencimentoData.toISOString().split("T")[0],
+    });
+
     // Marcar como alertado
     await supabase
       .from("cnd_certidoes")
@@ -111,6 +128,7 @@ serve(async (req) => {
         dias_vencimento,
         prioridade,
         arquivo_url,
+        tarefa_criada: true,
       },
     });
 

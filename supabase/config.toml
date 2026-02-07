@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.check-cnd-vencimentos]
 verify_jwt = false
+
+[functions.webhook-infosimples-callback]
+verify_jwt = false
