@@ -62,9 +62,7 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
   return (
     <header className="h-16 border-b border-border bg-card/50 backdrop-blur-xl flex items-center justify-between px-6">
       <div className="flex items-center gap-6">
-        <h1 className="text-lg font-semibold text-foreground">
-          {tabTitles[activeTab] || "Dashboard"}
-        </h1>
+        <h1 className="text-lg font-semibold text-foreground">{tabTitles[activeTab] || "Dashboard"}</h1>
       </div>
 
       <div className="flex items-center gap-4">
@@ -94,12 +92,7 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
               <span className="font-medium text-sm">Notificações</span>
               {(unreadCount ?? 0) > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => markAllAsRead.mutate()}
-                >
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => markAllAsRead.mutate()}>
                   <Check className="w-3 h-3 mr-1" />
                   Marcar todas como lidas
                 </Button>
@@ -107,9 +100,7 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
             </div>
             <ScrollArea className="h-64">
               {recentNotifications.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">
-                  Nenhuma notificação
-                </div>
+                <div className="p-4 text-center text-muted-foreground text-sm">Nenhuma notificação</div>
               ) : (
                 recentNotifications.map((notification) => (
                   <DropdownMenuItem
@@ -124,9 +115,7 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
                     }}
                   >
                     <span className="font-medium text-sm">{notification.title}</span>
-                    <span className="text-xs text-muted-foreground line-clamp-2">
-                      {notification.message}
-                    </span>
+                    <span className="text-xs text-muted-foreground line-clamp-2">{notification.message}</span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(notification.created_at).toLocaleDateString("pt-BR")}
                     </span>
@@ -136,13 +125,6 @@ const DashboardHeader = ({ activeTab }: DashboardHeaderProps) => {
             </ScrollArea>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Help */}
-        <Button variant="ghost" size="icon" className="hidden md:flex">
-          <span className="w-5 h-5 rounded-full border-2 border-muted-foreground flex items-center justify-center text-xs font-bold text-muted-foreground">
-            ?
-          </span>
-        </Button>
 
         {/* User Menu */}
         <DropdownMenu>
