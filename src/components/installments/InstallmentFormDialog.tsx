@@ -91,7 +91,7 @@ export const InstallmentFormDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="sm">
           <Plus className="w-4 h-4 mr-2" />
           Novo Parcelamento
         </Button>
