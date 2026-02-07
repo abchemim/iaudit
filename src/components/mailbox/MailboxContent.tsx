@@ -75,8 +75,8 @@ const MailboxContent = () => {
           <h2 className="text-xl font-semibold text-foreground">Caixas Postais</h2>
           <p className="text-sm text-muted-foreground">Monitore as caixas postais do e-CAC e SEFAZ de seus clientes.</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={isRefetching}>
-          <RefreshCw className={`w-0 h-0 mr-0 ${isRefetching ? "animate-spin" : ""}`} />
+        <Button variant="outline" size="icon" onClick={handleRefresh}>
+          <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
 
