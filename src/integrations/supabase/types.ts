@@ -408,6 +408,36 @@ export type Database = {
         }
         Relationships: []
       }
+      infosimples_saldo_historico: {
+        Row: {
+          alerta_enviado: boolean | null
+          created_at: string
+          data_verificacao: string
+          id: string
+          saldo_creditos: number
+          saldo_reais: number | null
+          user_id: string | null
+        }
+        Insert: {
+          alerta_enviado?: boolean | null
+          created_at?: string
+          data_verificacao?: string
+          id?: string
+          saldo_creditos: number
+          saldo_reais?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          alerta_enviado?: boolean | null
+          created_at?: string
+          data_verificacao?: string
+          id?: string
+          saldo_creditos?: number
+          saldo_reais?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       installments: {
         Row: {
           client_id: string
@@ -645,6 +675,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "simples_limits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas: {
+        Row: {
+          client_id: string
+          concluido_em: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          prioridade: string
+          relacionado_id: string | null
+          relacionado_tipo: string | null
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          user_id: string
+          vencimento: string | null
+        }
+        Insert: {
+          client_id: string
+          concluido_em?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          prioridade?: string
+          relacionado_id?: string | null
+          relacionado_tipo?: string | null
+          status?: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+          vencimento?: string | null
+        }
+        Update: {
+          client_id?: string
+          concluido_em?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          prioridade?: string
+          relacionado_id?: string | null
+          relacionado_tipo?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
