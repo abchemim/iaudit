@@ -408,7 +408,7 @@ const DashboardContent = ({ onNavigate }: DashboardContentProps) => {
                   <h3 className="text-sm font-medium text-foreground">Tarefas Pendentes</h3>
                 </div>
                 <button 
-                  onClick={() => handleNavigate("configuracoes")}
+                  onClick={() => handleNavigate("tarefas")}
                   className="text-primary text-xs font-medium flex items-center gap-1 hover:underline"
                 >
                   Ver todas
