@@ -1,4 +1,4 @@
-import { Bell, Search, LogOut, User, Check, Loader2, Building2, ClipboardList, X } from "lucide-react";
+import { Bell, Search, LogOut, User, Check, Loader2, Building2, ClipboardList, X, FileText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +33,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface SearchResult {
   id: string;
-  type: "client" | "tarefa";
+  type: "client" | "tarefa" | "declaracao" | "certidao";
   title: string;
   subtitle: string;
 }
@@ -103,7 +103,7 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
         .from("clients")
         .select("id, company_name, trade_name, cnpj")
         .or(`company_name.ilike.%${searchQuery}%,trade_name.ilike.%${searchQuery}%,cnpj.ilike.%${searchQuery}%`)
-        .limit(5);
+        .limit(4);
 
       if (clients) {
         clients.forEach((client) => {
@@ -121,7 +121,7 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
         .from("tarefas")
         .select("id, titulo, descricao")
         .or(`titulo.ilike.%${searchQuery}%,descricao.ilike.%${searchQuery}%`)
-        .limit(5);
+        .limit(3);
 
       if (tarefas) {
         tarefas.forEach((tarefa) => {
@@ -131,6 +131,82 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
             title: tarefa.titulo,
             subtitle: tarefa.descricao || "Sem descrição",
           });
+        });
+      }
+
+      // Search tax declarations
+      const { data: declarations } = await supabase
+        .from("tax_declarations")
+        .select("id, type, competence_month, status, clients(company_name, trade_name)")
+        .limit(3);
+
+      if (declarations) {
+        const declarationTypes: Record<string, string> = {
+          pgdas: "PGDAS-D",
+          pgmei: "PGMEI",
+          dctfweb: "DCTFWeb",
+          sped_fiscal: "SPED Fiscal",
+          sped_contabil: "SPED Contábil",
+          ecd: "ECD",
+          ecf: "ECF",
+        };
+
+        declarations.forEach((decl) => {
+          const clientName = decl.clients?.trade_name || decl.clients?.company_name || "Cliente";
+          const competence = new Date(decl.competence_month).toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+          const typeName = declarationTypes[decl.type] || decl.type;
+          
+          // Filter by search query on type or client name
+          if (
+            typeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            clientName.toLowerCase().includes(searchQuery.toLowerCase())
+          ) {
+            results.push({
+              id: decl.id,
+              type: "declaracao",
+              title: `${typeName} - ${competence}`,
+              subtitle: clientName,
+            });
+          }
+        });
+      }
+
+      // Search certificates (CND)
+      const { data: certidoes } = await supabase
+        .from("cnd_certidoes")
+        .select("id, tipo, orgao, status, situacao, clients(company_name, trade_name)")
+        .limit(3);
+
+      if (certidoes) {
+        const orgaoLabels: Record<string, string> = {
+          receita_federal: "Receita Federal",
+          pgfn: "PGFN",
+          tst: "TST",
+          fgts: "FGTS/CEF",
+          estadual: "Estadual",
+          municipal: "Municipal",
+        };
+
+        certidoes.forEach((cert) => {
+          const clientName = cert.clients?.trade_name || cert.clients?.company_name || "Cliente";
+          const orgaoName = orgaoLabels[cert.orgao] || cert.orgao;
+          
+          // Filter by search query on tipo, orgao or client name
+          if (
+            cert.tipo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            orgaoName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            "cnd".includes(searchQuery.toLowerCase()) ||
+            "certidão".includes(searchQuery.toLowerCase()) ||
+            "certidao".includes(searchQuery.toLowerCase())
+          ) {
+            results.push({
+              id: cert.id,
+              type: "certidao",
+              title: `${cert.tipo} - ${orgaoName}`,
+              subtitle: clientName,
+            });
+          }
         });
       }
 
@@ -147,6 +223,10 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
       onTabChange?.("clientes");
     } else if (result.type === "tarefa") {
       onTabChange?.("tarefas");
+    } else if (result.type === "declaracao") {
+      onTabChange?.("declaracoes");
+    } else if (result.type === "certidao") {
+      onTabChange?.("certidoes");
     }
   };
 
@@ -191,7 +271,7 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
             <input
               type="text"
-              placeholder="Buscar clientes, tarefas..."
+              placeholder="Buscar clientes, tarefas, declarações, certidões..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -231,8 +311,12 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           {result.type === "client" ? (
                             <Building2 className="w-4 h-4 text-primary" />
-                          ) : (
+                          ) : result.type === "tarefa" ? (
                             <ClipboardList className="w-4 h-4 text-primary" />
+                          ) : result.type === "declaracao" ? (
+                            <FileText className="w-4 h-4 text-primary" />
+                          ) : (
+                            <ShieldCheck className="w-4 h-4 text-primary" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -240,7 +324,9 @@ const DashboardHeader = ({ activeTab, onTabChange }: DashboardHeaderProps) => {
                           <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
                         </div>
                         <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-                          {result.type === "client" ? "Cliente" : "Tarefa"}
+                          {result.type === "client" ? "Cliente" : 
+                           result.type === "tarefa" ? "Tarefa" :
+                           result.type === "declaracao" ? "Declaração" : "Certidão"}
                         </span>
                       </button>
                     ))}
