@@ -53,7 +53,7 @@ export const ConsultarCndDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="sm">
           <SearchIcon className="w-4 h-4 mr-2" />
           Consultar CND
         </Button>

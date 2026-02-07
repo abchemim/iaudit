@@ -94,8 +94,8 @@ export const DeclarationFormDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
+        <Button size="sm">
+          <Plus className="w-4 h-4 mr-2" />
           Nova Declaração
         </Button>
       </DialogTrigger>
