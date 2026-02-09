@@ -128,7 +128,7 @@ const DashboardHeader = ({
       // Search tax declarations
       const {
         data: declarations
-      } = await supabase.from("tax_declarations").select("id, type, competence_month, status, clients(company_name, trade_name)").limit(3);
+      } = await supabase.from("tax_declarations").select("id, type, competence_month, status, clients(company_name, trade_name)").limit(3) as { data: any[] | null, error: any };
       if (declarations) {
         const declarationTypes: Record<string, string> = {
           pgdas: "PGDAS-D",
@@ -162,7 +162,7 @@ const DashboardHeader = ({
       // Search certificates (CND)
       const {
         data: certidoes
-      } = await supabase.from("cnd_certidoes").select("id, tipo, orgao, status, situacao, clients(company_name, trade_name)").limit(3);
+      } = await supabase.from("cnd_certidoes").select("id, tipo, orgao, status, situacao, clients(company_name, trade_name)").limit(3) as { data: any[] | null, error: any };
       if (certidoes) {
         const orgaoLabels: Record<string, string> = {
           receita_federal: "Receita Federal",
