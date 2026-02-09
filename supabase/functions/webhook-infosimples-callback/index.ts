@@ -16,21 +16,25 @@ serve(async (req) => {
   }
 
   try {
-    // Validate webhook secret for authentication
+    // Validate webhook secret for authentication - REQUIRED
     const WEBHOOK_SECRET = Deno.env.get("INFOSIMPLES_WEBHOOK_SECRET");
-    const providedSecret = req.headers.get("X-Webhook-Secret");
+    
+    // Reject if webhook secret is not configured
+    if (!WEBHOOK_SECRET || WEBHOOK_SECRET.length === 0) {
+      console.error("INFOSIMPLES_WEBHOOK_SECRET not configured - rejecting request");
+      return new Response(
+        JSON.stringify({ error: "Webhook authentication not configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
 
-    // If webhook secret is configured, validate it
-    if (WEBHOOK_SECRET && WEBHOOK_SECRET.length > 0) {
-      if (!providedSecret || providedSecret !== WEBHOOK_SECRET) {
-        console.error("Unauthorized webhook request - invalid or missing secret");
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
-    } else {
-      console.warn("INFOSIMPLES_WEBHOOK_SECRET not configured - webhook authentication disabled");
+    const providedSecret = req.headers.get("X-Webhook-Secret");
+    if (!providedSecret || providedSecret !== WEBHOOK_SECRET) {
+      console.error("Unauthorized webhook request - invalid or missing secret");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
