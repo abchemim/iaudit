@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          cnpj: string
+          company_name: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          state: string | null
+          state_registration: string | null
+        }
+        Insert: {
+          cnpj: string
+          company_name: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          state?: string | null
+          state_registration?: string | null
+        }
+        Update: {
+          cnpj?: string
+          company_name?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          state?: string | null
+          state_registration?: string | null
+        }
+        Relationships: []
+      }
+      cnds: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          data_emissao: string | null
+          data_vencimento: string
+          id: string
+          status_cnd: string | null
+          tipo: string
+          url_pdf: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_vencimento: string
+          id?: string
+          status_cnd?: string | null
+          tipo: string
+          url_pdf?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_vencimento?: string
+          id?: string
+          status_cnd?: string | null
+          tipo?: string
+          url_pdf?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cnds_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_cnd: {
+        Row: {
+          cliente_id: string | null
+          data_emissao: string | null
+          id: string
+          status_regularidade: string | null
+          tipo: string | null
+          url_arquivo: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          data_emissao?: string | null
+          id?: string
+          status_regularidade?: string | null
+          tipo?: string | null
+          url_arquivo?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          data_emissao?: string | null
+          id?: string
+          status_regularidade?: string | null
+          tipo?: string | null
+          url_arquivo?: string | null
+        }
+        Relationships: []
+      }
+      logs_automacao: {
+        Row: {
+          acao: string | null
+          created_at: string | null
+          dados_retorno: Json | null
+          id: string
+          mensagem: string | null
+          status: string | null
+          workflow_n8n: string | null
+        }
+        Insert: {
+          acao?: string | null
+          created_at?: string | null
+          dados_retorno?: Json | null
+          id?: string
+          mensagem?: string | null
+          status?: string | null
+          workflow_n8n?: string | null
+        }
+        Update: {
+          acao?: string | null
+          created_at?: string | null
+          dados_retorno?: Json | null
+          id?: string
+          mensagem?: string | null
+          status?: string | null
+          workflow_n8n?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
