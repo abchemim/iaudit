@@ -1,18 +1,18 @@
-project_id = "ezkaucgaqlmuwzhgixgm"
+project_id = "dtknaeiykrfjrzgvskvz"
 
-[functions.consulta-cnd]
+[functions.query-certificate]
 verify_jwt = false
 
-[functions.check-cnd-vencimentos]
+[functions.consulta-cnd]
 verify_jwt = false
 
 [functions.send-cnd-alert]
 verify_jwt = false
 
-[functions.webhook-infosimples-callback]
+[functions.check-cnd-vencimentos]
 verify_jwt = false
 
-[functions.query-certificate]
+[functions.webhook-infosimples-callback]
 verify_jwt = false
 
 [functions.check-tarefas-vencimentos]

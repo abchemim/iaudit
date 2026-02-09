@@ -146,13 +146,13 @@ export const TarefasTable = ({ tarefas, isLoading, search }: TarefasTableProps) 
                 </Badge>
               </TableCell>
               <TableCell>
-                {tarefa.data_vencimento ? (
+                {tarefa.vencimento ? (
                   <span className={
-                    new Date(tarefa.data_vencimento) < new Date() && tarefa.status !== "concluida"
+                    new Date(tarefa.vencimento) < new Date() && tarefa.status !== "concluida"
                       ? "text-status-danger"
                       : ""
                   }>
-                    {format(new Date(tarefa.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}
+                    {format(new Date(tarefa.vencimento), "dd/MM/yyyy", { locale: ptBR })}
                   </span>
                 ) : (
                   <span className="text-muted-foreground">-</span>

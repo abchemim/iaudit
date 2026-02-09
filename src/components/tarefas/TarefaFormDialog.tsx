@@ -64,11 +64,11 @@ export const TarefaFormDialog = ({ open, onOpenChange, tarefa }: TarefaFormDialo
     if (tarefa) {
       setTitulo(tarefa.titulo);
       setDescricao(tarefa.descricao || "");
-      setTipo(tarefa.tipo as TarefaTipo);
-      setPrioridade(tarefa.prioridade as TarefaPrioridade);
-      setStatus(tarefa.status as TarefaStatus);
-      setClientId(tarefa.company_id || "");
-      setVencimento(tarefa.data_vencimento || "");
+      setTipo(tarefa.tipo);
+      setPrioridade(tarefa.prioridade);
+      setStatus(tarefa.status);
+      setClientId(tarefa.client_id || "");
+      setVencimento(tarefa.vencimento || "");
     } else {
       resetForm();
     }
@@ -93,11 +93,9 @@ export const TarefaFormDialog = ({ open, onOpenChange, tarefa }: TarefaFormDialo
       tipo,
       prioridade,
       status,
-      company_id: clientId || null,
-      responsavel_id: null,
-      data_vencimento: vencimento || null,
-      data_conclusao: null,
-      observacoes: null,
+      client_id: clientId || null,
+      vencimento: vencimento || null,
+      user_id: null,
       relacionado_tipo: null,
       relacionado_id: null,
     };

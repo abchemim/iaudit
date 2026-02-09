@@ -138,7 +138,7 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
             <TableHead>Emissão</TableHead>
             <TableHead>Validade</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Arquivo</TableHead>
+            <TableHead>Automática</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -183,18 +183,10 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
                   {getStatusBadge(cnd.status)}
                 </TableCell>
                 <TableCell>
-                  {(cnd.arquivo_url || cnd.pdf_base64) ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadPdf(cnd)}
-                      className="gap-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      PDF
-                    </Button>
+                  {cnd.obtida_automaticamente ? (
+                    <Badge variant="secondary">✅ Sim</Badge>
                   ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
+                    <Badge variant="outline">👤 Manual</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
@@ -209,12 +201,6 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
                         <DropdownMenuItem onClick={() => handleDownloadPdf(cnd)}>
                           <Download className="w-4 h-4 mr-2" />
                           Baixar PDF
-                        </DropdownMenuItem>
-                      )}
-                      {cnd.obtida_automaticamente && (
-                        <DropdownMenuItem disabled>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Obtida automaticamente
                         </DropdownMenuItem>
                       )}
                       {["federal", "estadual", "fgts"].includes(cnd.tipo) && (
