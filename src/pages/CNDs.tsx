@@ -12,21 +12,21 @@ import { FileText, Download, RefreshCw, AlertCircle, CheckCircle, Clock } from '
 
 interface CND {
   id: string;
-  company_id: string;
+  client_id: string;
   tipo: string;
   orgao: string;
-  numero_certidao: string;
-  data_emissao: string;
-  data_validade: string;
-  situacao: string;
-  arquivo_url: string;
-  arquivo_nome: string;
+  numero_certidao: string | null;
+  data_emissao: string | null;
+  data_validade: string | null;
+  situacao: string | null;
+  arquivo_url: string | null;
+  arquivo_nome: string | null;
   status: string;
-  alertado: boolean;
-  companies: {
-    razao_social: string;
+  alertado: boolean | null;
+  clients: {
+    company_name: string;
     cnpj: string;
-  };
+  } | null;
 }
 
 export default function CNDsPage() {
@@ -60,7 +60,7 @@ export default function CNDsPage() {
         .from('cnd_certidoes')
         .select(`
           *,
-          companies:company_id (razao_social, cnpj)
+          clients:client_id (company_name, cnpj)
         `)
         .order('created_at', { ascending: false });
 
@@ -77,11 +77,11 @@ export default function CNDsPage() {
       if (error) throw error;
 
       // Filtrar por termo de busca no cliente
-      let filteredData = data || [];
+      let filteredData = (data || []) as CND[];
       if (searchTerm) {
         filteredData = filteredData.filter(cnd => 
-          cnd.companies?.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cnd.companies?.cnpj?.includes(searchTerm)
+          cnd.clients?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cnd.clients?.cnpj?.includes(searchTerm)
         );
       }
 
@@ -278,8 +278,8 @@ export default function CNDsPage() {
                 cnds.map((cnd) => (
                   <TableRow key={cnd.id}>
                     <TableCell>
-                      <div className="font-medium">{cnd.companies?.razao_social}</div>
-                      <div className="text-sm text-muted-foreground">{cnd.companies?.cnpj}</div>
+                      <div className="font-medium">{cnd.clients?.company_name}</div>
+                      <div className="text-sm text-muted-foreground">{cnd.clients?.cnpj}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -326,11 +326,11 @@ export default function CNDsPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
                                     <label className="text-sm font-medium">Empresa</label>
-                                    <p>{selectedCND.companies?.razao_social}</p>
+                                    <p>{selectedCND.clients?.company_name}</p>
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium">CNPJ</label>
-                                    <p>{selectedCND.companies?.cnpj}</p>
+                                    <p>{selectedCND.clients?.cnpj}</p>
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium">Tipo</label>
