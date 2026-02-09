@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      caixa_postal_fiscal: {
+        Row: {
+          acao_sugerida: string | null
+          analisada_ia: boolean | null
+          arquivada: boolean | null
+          assunto: string | null
+          categoria: string | null
+          company_id: string
+          conteudo_original: string | null
+          conteudo_resumido: string | null
+          created_at: string | null
+          data_leitura: string | null
+          data_mensagem: string | null
+          data_prazo: string | null
+          id: string
+          lida: boolean | null
+          origem: string | null
+          prioridade: string | null
+          remetente: string | null
+          respondida: boolean | null
+          tags_ia: string[] | null
+          tem_prazo: boolean | null
+        }
+        Insert: {
+          acao_sugerida?: string | null
+          analisada_ia?: boolean | null
+          arquivada?: boolean | null
+          assunto?: string | null
+          categoria?: string | null
+          company_id: string
+          conteudo_original?: string | null
+          conteudo_resumido?: string | null
+          created_at?: string | null
+          data_leitura?: string | null
+          data_mensagem?: string | null
+          data_prazo?: string | null
+          id?: string
+          lida?: boolean | null
+          origem?: string | null
+          prioridade?: string | null
+          remetente?: string | null
+          respondida?: boolean | null
+          tags_ia?: string[] | null
+          tem_prazo?: boolean | null
+        }
+        Update: {
+          acao_sugerida?: string | null
+          analisada_ia?: boolean | null
+          arquivada?: boolean | null
+          assunto?: string | null
+          categoria?: string | null
+          company_id?: string
+          conteudo_original?: string | null
+          conteudo_resumido?: string | null
+          created_at?: string | null
+          data_leitura?: string | null
+          data_mensagem?: string | null
+          data_prazo?: string | null
+          id?: string
+          lida?: boolean | null
+          origem?: string | null
+          prioridade?: string | null
+          remetente?: string | null
+          respondida?: boolean | null
+          tags_ia?: string[] | null
+          tem_prazo?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixa_postal_fiscal_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -82,9 +159,12 @@ export type Database = {
           arquivo_url: string | null
           client_id: string
           codigo_controle: string | null
+          company_id: string | null
           created_at: string
           data_emissao: string | null
           data_validade: string | null
+          fonte: string | null
+          hash_arquivo: string | null
           id: string
           infosimples_creditos_usados: number | null
           infosimples_query_id: string | null
@@ -107,9 +187,12 @@ export type Database = {
           arquivo_url?: string | null
           client_id: string
           codigo_controle?: string | null
+          company_id?: string | null
           created_at?: string
           data_emissao?: string | null
           data_validade?: string | null
+          fonte?: string | null
+          hash_arquivo?: string | null
           id?: string
           infosimples_creditos_usados?: number | null
           infosimples_query_id?: string | null
@@ -132,9 +215,12 @@ export type Database = {
           arquivo_url?: string | null
           client_id?: string
           codigo_controle?: string | null
+          company_id?: string | null
           created_at?: string
           data_emissao?: string | null
           data_validade?: string | null
+          fonte?: string | null
+          hash_arquivo?: string | null
           id?: string
           infosimples_creditos_usados?: number | null
           infosimples_query_id?: string | null
@@ -156,6 +242,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cnd_certidoes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -207,6 +300,72 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          ativo: boolean | null
+          certificado_a1_url: string | null
+          certificado_senha_encrypted: string | null
+          cnpj: string
+          codigo_acesso_ecac: string | null
+          created_at: string | null
+          faturamento_acumulado: number | null
+          id: string
+          nome_fantasia: string | null
+          razao_social: string
+          regime_tributario: string | null
+          responsavel_id: string | null
+          state: string | null
+          state_registration: string | null
+          status_fiscal: string | null
+          sublimite_simples: number | null
+          tags: string[] | null
+          ultima_verificacao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          certificado_a1_url?: string | null
+          certificado_senha_encrypted?: string | null
+          cnpj: string
+          codigo_acesso_ecac?: string | null
+          created_at?: string | null
+          faturamento_acumulado?: number | null
+          id?: string
+          nome_fantasia?: string | null
+          razao_social: string
+          regime_tributario?: string | null
+          responsavel_id?: string | null
+          state?: string | null
+          state_registration?: string | null
+          status_fiscal?: string | null
+          sublimite_simples?: number | null
+          tags?: string[] | null
+          ultima_verificacao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          certificado_a1_url?: string | null
+          certificado_senha_encrypted?: string | null
+          cnpj?: string
+          codigo_acesso_ecac?: string | null
+          created_at?: string | null
+          faturamento_acumulado?: number | null
+          id?: string
+          nome_fantasia?: string | null
+          razao_social?: string
+          regime_tributario?: string | null
+          responsavel_id?: string | null
+          state?: string | null
+          state_registration?: string | null
+          status_fiscal?: string | null
+          sublimite_simples?: number | null
+          tags?: string[] | null
+          ultima_verificacao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           company_address: string | null
@@ -246,12 +405,21 @@ export type Database = {
       configuracoes_alertas: {
         Row: {
           alerta_cnd_vencimento: boolean | null
+          alerta_debito_detectado: boolean | null
+          alerta_guia_vencimento: boolean | null
+          alerta_intimacao: boolean | null
+          alerta_sublimite_simples: boolean | null
           client_id: string | null
+          company_id: string | null
           created_at: string
           dias_antecedencia_alerta: number | null
+          dias_antecedencia_cnd: number | null
+          dias_antecedencia_guia: number | null
           email_ativo: boolean | null
+          email_destinatario: string | null
           email_endereco: string | null
           id: string
+          percentual_sublimite: number | null
           updated_at: string
           user_id: string
           whatsapp_ativo: boolean | null
@@ -259,12 +427,21 @@ export type Database = {
         }
         Insert: {
           alerta_cnd_vencimento?: boolean | null
+          alerta_debito_detectado?: boolean | null
+          alerta_guia_vencimento?: boolean | null
+          alerta_intimacao?: boolean | null
+          alerta_sublimite_simples?: boolean | null
           client_id?: string | null
+          company_id?: string | null
           created_at?: string
           dias_antecedencia_alerta?: number | null
+          dias_antecedencia_cnd?: number | null
+          dias_antecedencia_guia?: number | null
           email_ativo?: boolean | null
+          email_destinatario?: string | null
           email_endereco?: string | null
           id?: string
+          percentual_sublimite?: number | null
           updated_at?: string
           user_id: string
           whatsapp_ativo?: boolean | null
@@ -272,12 +449,21 @@ export type Database = {
         }
         Update: {
           alerta_cnd_vencimento?: boolean | null
+          alerta_debito_detectado?: boolean | null
+          alerta_guia_vencimento?: boolean | null
+          alerta_intimacao?: boolean | null
+          alerta_sublimite_simples?: boolean | null
           client_id?: string | null
+          company_id?: string | null
           created_at?: string
           dias_antecedencia_alerta?: number | null
+          dias_antecedencia_cnd?: number | null
+          dias_antecedencia_guia?: number | null
           email_ativo?: boolean | null
+          email_destinatario?: string | null
           email_endereco?: string | null
           id?: string
+          percentual_sublimite?: number | null
           updated_at?: string
           user_id?: string
           whatsapp_ativo?: boolean | null
@@ -291,53 +477,90 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_configuracoes_alertas_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
         ]
       }
       debitos_fiscais: {
         Row: {
           api_response: Json | null
           client_id: string
+          company_id: string | null
+          competencia: string | null
           created_at: string
+          data_vencimento: string | null
           descricao: string | null
           detectado_via: string | null
+          detected_at: string | null
           id: string
+          numero_documento: string | null
           origem: string
+          parcelamento_id: string | null
           prioridade: string | null
           resolvido_em: string | null
           status: string
           tipo: string
           updated_at: string
           valor: number | null
+          valor_juros: number | null
+          valor_multa: number | null
+          valor_principal: number | null
+          valor_total: number | null
         }
         Insert: {
           api_response?: Json | null
           client_id: string
+          company_id?: string | null
+          competencia?: string | null
           created_at?: string
+          data_vencimento?: string | null
           descricao?: string | null
           detectado_via?: string | null
+          detected_at?: string | null
           id?: string
+          numero_documento?: string | null
           origem: string
+          parcelamento_id?: string | null
           prioridade?: string | null
           resolvido_em?: string | null
           status?: string
           tipo: string
           updated_at?: string
           valor?: number | null
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_principal?: number | null
+          valor_total?: number | null
         }
         Update: {
           api_response?: Json | null
           client_id?: string
+          company_id?: string | null
+          competencia?: string | null
           created_at?: string
+          data_vencimento?: string | null
           descricao?: string | null
           detectado_via?: string | null
+          detected_at?: string | null
           id?: string
+          numero_documento?: string | null
           origem?: string
+          parcelamento_id?: string | null
           prioridade?: string | null
           resolvido_em?: string | null
           status?: string
           tipo?: string
           updated_at?: string
           valor?: number | null
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_principal?: number | null
+          valor_total?: number | null
         }
         Relationships: [
           {
@@ -345,6 +568,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debitos_fiscais_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debitos_fiscais_parcelamento_id_fkey"
+            columns: ["parcelamento_id"]
+            isOneToOne: false
+            referencedRelation: "parcelamentos"
             referencedColumns: ["id"]
           },
         ]
@@ -398,6 +635,77 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guias_tributarias: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          codigo_barras: string | null
+          company_id: string
+          competencia: string | null
+          created_at: string | null
+          data_envio: string | null
+          data_pagamento: string | null
+          data_vencimento: string | null
+          data_visualizacao: string | null
+          enviada_cliente: boolean | null
+          gerada_automaticamente: boolean | null
+          id: string
+          origem: string | null
+          status: string | null
+          tipo: string
+          valor: number | null
+          visualizada: boolean | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          codigo_barras?: string | null
+          company_id: string
+          competencia?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          data_visualizacao?: string | null
+          enviada_cliente?: boolean | null
+          gerada_automaticamente?: boolean | null
+          id?: string
+          origem?: string | null
+          status?: string | null
+          tipo: string
+          valor?: number | null
+          visualizada?: boolean | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          codigo_barras?: string | null
+          company_id?: string
+          competencia?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          data_visualizacao?: string | null
+          enviada_cliente?: boolean | null
+          gerada_automaticamente?: boolean | null
+          id?: string
+          origem?: string | null
+          status?: string | null
+          tipo?: string
+          valor?: number | null
+          visualizada?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guias_tributarias_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -537,6 +845,7 @@ export type Database = {
         Row: {
           acao: string
           client_id: string | null
+          company_id: string | null
           created_at: string
           dados_retorno: Json | null
           erro_detalhes: string | null
@@ -552,6 +861,7 @@ export type Database = {
         Insert: {
           acao: string
           client_id?: string | null
+          company_id?: string | null
           created_at?: string
           dados_retorno?: Json | null
           erro_detalhes?: string | null
@@ -567,6 +877,7 @@ export type Database = {
         Update: {
           acao?: string
           client_id?: string | null
+          company_id?: string | null
           created_at?: string
           dados_retorno?: Json | null
           erro_detalhes?: string | null
@@ -585,6 +896,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_automacao_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -719,6 +1037,74 @@ export type Database = {
           },
         ]
       }
+      parcelamentos: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          data_fim_prevista: string | null
+          data_inicio: string | null
+          dia_vencimento: number | null
+          id: string
+          numero_parcelamento: string | null
+          orgao: string | null
+          parcelas_pagas: number | null
+          parcelas_pendentes: number | null
+          quantidade_parcelas: number | null
+          status: string | null
+          tipo: string | null
+          ultima_atualizacao: string | null
+          valor_consolidado: number | null
+          valor_original: number | null
+          valor_parcela: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          data_fim_prevista?: string | null
+          data_inicio?: string | null
+          dia_vencimento?: number | null
+          id?: string
+          numero_parcelamento?: string | null
+          orgao?: string | null
+          parcelas_pagas?: number | null
+          parcelas_pendentes?: number | null
+          quantidade_parcelas?: number | null
+          status?: string | null
+          tipo?: string | null
+          ultima_atualizacao?: string | null
+          valor_consolidado?: number | null
+          valor_original?: number | null
+          valor_parcela?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          data_fim_prevista?: string | null
+          data_inicio?: string | null
+          dia_vencimento?: number | null
+          id?: string
+          numero_parcelamento?: string | null
+          orgao?: string | null
+          parcelas_pagas?: number | null
+          parcelas_pendentes?: number | null
+          quantidade_parcelas?: number | null
+          status?: string | null
+          tipo?: string | null
+          ultima_atualizacao?: string | null
+          valor_consolidado?: number | null
+          valor_original?: number | null
+          valor_parcela?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelamentos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       simples_limits: {
         Row: {
           accumulated_revenue: number
@@ -762,57 +1148,66 @@ export type Database = {
       }
       tarefas: {
         Row: {
-          client_id: string | null
+          company_id: string | null
+          concluida_automaticamente: boolean | null
           concluido_em: string | null
           created_at: string
+          data_conclusao: string | null
+          data_vencimento: string | null
           descricao: string | null
           id: string
+          observacoes: string | null
           prioridade: string
           relacionado_id: string | null
           relacionado_tipo: string | null
+          responsavel_id: string | null
           status: string
           tipo: string
           titulo: string
           updated_at: string
-          user_id: string | null
-          vencimento: string | null
         }
         Insert: {
-          client_id?: string | null
+          company_id?: string | null
+          concluida_automaticamente?: boolean | null
           concluido_em?: string | null
           created_at?: string
+          data_conclusao?: string | null
+          data_vencimento?: string | null
           descricao?: string | null
           id?: string
+          observacoes?: string | null
           prioridade?: string
           relacionado_id?: string | null
           relacionado_tipo?: string | null
+          responsavel_id?: string | null
           status?: string
           tipo?: string
           titulo: string
           updated_at?: string
-          user_id?: string | null
-          vencimento?: string | null
         }
         Update: {
-          client_id?: string | null
+          company_id?: string | null
+          concluida_automaticamente?: boolean | null
           concluido_em?: string | null
           created_at?: string
+          data_conclusao?: string | null
+          data_vencimento?: string | null
           descricao?: string | null
           id?: string
+          observacoes?: string | null
           prioridade?: string
           relacionado_id?: string | null
           relacionado_tipo?: string | null
+          responsavel_id?: string | null
           status?: string
           tipo?: string
           titulo?: string
           updated_at?: string
-          user_id?: string | null
-          vencimento?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "tarefas_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]

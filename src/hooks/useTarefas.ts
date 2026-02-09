@@ -9,17 +9,20 @@ export type TarefaTipo = "verificacao" | "renovacao" | "correcao" | "outro";
 
 export interface Tarefa {
   id: string;
-  client_id: string | null;
-  user_id: string | null;
+  company_id: string | null;
+  responsavel_id: string | null;
   titulo: string;
   descricao: string | null;
-  tipo: TarefaTipo;
+  tipo: string;
   relacionado_tipo: string | null;
   relacionado_id: string | null;
-  prioridade: TarefaPrioridade;
-  status: TarefaStatus;
-  vencimento: string | null;
+  prioridade: string;
+  status: string;
+  data_vencimento: string | null;
+  data_conclusao: string | null;
   concluido_em: string | null;
+  concluida_automaticamente: boolean | null;
+  observacoes: string | null;
   created_at: string;
   updated_at: string;
   clients?: {
@@ -27,7 +30,7 @@ export interface Tarefa {
     company_name: string;
     trade_name: string | null;
     cnpj: string;
-  };
+  } | null;
 }
 
 export interface TarefaFilters {
@@ -58,7 +61,7 @@ export const useTarefas = (filters?: TarefaFilters) => {
         .from("tarefas")
         .select(`
           *,
-          clients(id, company_name, trade_name, cnpj)
+          clients:company_id (id, company_name, trade_name, cnpj)
         `)
         .order("created_at", { ascending: false });
 
@@ -69,7 +72,7 @@ export const useTarefas = (filters?: TarefaFilters) => {
         query = query.eq("prioridade", filters.prioridade);
       }
       if (filters?.clientId) {
-        query = query.eq("client_id", filters.clientId);
+        query = query.eq("company_id", filters.clientId);
       }
 
       const { data, error } = await query;
@@ -155,12 +158,12 @@ export const useCreateTarefa = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (tarefa: Omit<Tarefa, "id" | "created_at" | "updated_at" | "clients" | "concluido_em">) => {
+    mutationFn: async (tarefa: Omit<Tarefa, "id" | "created_at" | "updated_at" | "clients" | "concluido_em" | "concluida_automaticamente">) => {
       const { data, error } = await supabase
         .from("tarefas")
         .insert({
           ...tarefa,
-          user_id: user?.id,
+          responsavel_id: user?.id,
         })
         .select()
         .single();
