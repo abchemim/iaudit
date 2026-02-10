@@ -14,6 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
+      caixa_postal_fiscal: {
+        Row: {
+          acao_sugerida: string | null
+          anexos: Json | null
+          arquivada: boolean | null
+          assunto: string | null
+          classificacao: string | null
+          cliente_id: string | null
+          conteudo_original: string | null
+          conteudo_resumo: string | null
+          created_at: string | null
+          data_leitura: string | null
+          data_prazo: string | null
+          dias_restantes: number | null
+          id: string
+          lida: boolean | null
+          origem: string | null
+          possui_prazo: boolean | null
+          remetente: string | null
+          responsavel: string | null
+          tags_ia: string[] | null
+          tipo_mensagem: string | null
+          urgencia: string | null
+        }
+        Insert: {
+          acao_sugerida?: string | null
+          anexos?: Json | null
+          arquivada?: boolean | null
+          assunto?: string | null
+          classificacao?: string | null
+          cliente_id?: string | null
+          conteudo_original?: string | null
+          conteudo_resumo?: string | null
+          created_at?: string | null
+          data_leitura?: string | null
+          data_prazo?: string | null
+          dias_restantes?: number | null
+          id?: string
+          lida?: boolean | null
+          origem?: string | null
+          possui_prazo?: boolean | null
+          remetente?: string | null
+          responsavel?: string | null
+          tags_ia?: string[] | null
+          tipo_mensagem?: string | null
+          urgencia?: string | null
+        }
+        Update: {
+          acao_sugerida?: string | null
+          anexos?: Json | null
+          arquivada?: boolean | null
+          assunto?: string | null
+          classificacao?: string | null
+          cliente_id?: string | null
+          conteudo_original?: string | null
+          conteudo_resumo?: string | null
+          created_at?: string | null
+          data_leitura?: string | null
+          data_prazo?: string | null
+          dias_restantes?: number | null
+          id?: string
+          lida?: boolean | null
+          origem?: string | null
+          possui_prazo?: boolean | null
+          remetente?: string | null
+          responsavel?: string | null
+          tags_ia?: string[] | null
+          tipo_mensagem?: string | null
+          urgencia?: string | null
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          ativo: boolean | null
+          cep: string | null
+          certificado_a1_path: string | null
+          certificado_senha_encrypted: string | null
+          cidade: string | null
+          cnpj: string
+          created_at: string | null
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          frequencia_consulta: string | null
+          id: string
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          nome_fantasia: string | null
+          observacoes: string | null
+          razao_social: string
+          regime_tributario: string | null
+          responsavel: string | null
+          responsavel_contador: string | null
+          tags: string[] | null
+          telefone: string | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cep?: string | null
+          certificado_a1_path?: string | null
+          certificado_senha_encrypted?: string | null
+          cidade?: string | null
+          cnpj: string
+          created_at?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          frequencia_consulta?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          razao_social: string
+          regime_tributario?: string | null
+          responsavel?: string | null
+          responsavel_contador?: string | null
+          tags?: string[] | null
+          telefone?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cep?: string | null
+          certificado_a1_path?: string | null
+          certificado_senha_encrypted?: string | null
+          cidade?: string | null
+          cnpj?: string
+          created_at?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          frequencia_consulta?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          razao_social?: string
+          regime_tributario?: string | null
+          responsavel?: string | null
+          responsavel_contador?: string | null
+          tags?: string[] | null
+          telefone?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           cnpj: string
@@ -218,6 +371,42 @@ export type Database = {
           },
         ]
       }
+      configuracoes: {
+        Row: {
+          categoria: string | null
+          chave: string
+          descricao: string | null
+          id: string
+          responsavel: string | null
+          sensivel: boolean | null
+          tipo: string | null
+          updated_at: string | null
+          valor: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          chave: string
+          descricao?: string | null
+          id?: string
+          responsavel?: string | null
+          sensivel?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+          valor?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          chave?: string
+          descricao?: string | null
+          id?: string
+          responsavel?: string | null
+          sensivel?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+          valor?: string | null
+        }
+        Relationships: []
+      }
       configuracoes_alertas: {
         Row: {
           alerta_cnd_vencimento: boolean | null
@@ -265,6 +454,75 @@ export type Database = {
           },
         ]
       }
+      consultas_cnd: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          data_emissao: string | null
+          data_notificacao: string | null
+          data_validade: string | null
+          detalhes_debitos: Json | null
+          id: string
+          notificado: boolean | null
+          numero_certidao: string | null
+          pdf_path: string | null
+          pdf_url: string | null
+          possui_debitos: boolean | null
+          protocolo: string | null
+          quantidade_debitos: number | null
+          responsavel: string | null
+          resposta_api: Json | null
+          situacao_fiscal: string | null
+          status: string
+          tipo_certidao: string
+          valor_total_debitos: number | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_notificacao?: string | null
+          data_validade?: string | null
+          detalhes_debitos?: Json | null
+          id?: string
+          notificado?: boolean | null
+          numero_certidao?: string | null
+          pdf_path?: string | null
+          pdf_url?: string | null
+          possui_debitos?: boolean | null
+          protocolo?: string | null
+          quantidade_debitos?: number | null
+          responsavel?: string | null
+          resposta_api?: Json | null
+          situacao_fiscal?: string | null
+          status: string
+          tipo_certidao: string
+          valor_total_debitos?: number | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_notificacao?: string | null
+          data_validade?: string | null
+          detalhes_debitos?: Json | null
+          id?: string
+          notificado?: boolean | null
+          numero_certidao?: string | null
+          pdf_path?: string | null
+          pdf_url?: string | null
+          possui_debitos?: boolean | null
+          protocolo?: string | null
+          quantidade_debitos?: number | null
+          responsavel?: string | null
+          resposta_api?: Json | null
+          situacao_fiscal?: string | null
+          status?: string
+          tipo_certidao?: string
+          valor_total_debitos?: number | null
+        }
+        Relationships: []
+      }
       documentos_cnd: {
         Row: {
           cliente_id: string | null
@@ -289,6 +547,138 @@ export type Database = {
           status_regularidade?: string | null
           tipo?: string | null
           url_arquivo?: string | null
+        }
+        Relationships: []
+      }
+      envios: {
+        Row: {
+          anexos: Json | null
+          assunto: string | null
+          canal: string
+          cliente_id: string | null
+          consulta_cnd_id: string | null
+          created_at: string | null
+          data_envio: string | null
+          data_leitura: string | null
+          destinatario: string
+          erro_mensagem: string | null
+          id: string
+          mensagem: string | null
+          message_id: string | null
+          metadata: Json | null
+          responsavel: string | null
+          status: string | null
+          template_usado: string | null
+          tentativas: number | null
+        }
+        Insert: {
+          anexos?: Json | null
+          assunto?: string | null
+          canal: string
+          cliente_id?: string | null
+          consulta_cnd_id?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          data_leitura?: string | null
+          destinatario: string
+          erro_mensagem?: string | null
+          id?: string
+          mensagem?: string | null
+          message_id?: string | null
+          metadata?: Json | null
+          responsavel?: string | null
+          status?: string | null
+          template_usado?: string | null
+          tentativas?: number | null
+        }
+        Update: {
+          anexos?: Json | null
+          assunto?: string | null
+          canal?: string
+          cliente_id?: string | null
+          consulta_cnd_id?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          data_leitura?: string | null
+          destinatario?: string
+          erro_mensagem?: string | null
+          id?: string
+          mensagem?: string | null
+          message_id?: string | null
+          metadata?: Json | null
+          responsavel?: string | null
+          status?: string | null
+          template_usado?: string | null
+          tentativas?: number | null
+        }
+        Relationships: []
+      }
+      historico_debitos: {
+        Row: {
+          cliente_id: string | null
+          consulta_cnd_id: string | null
+          created_at: string | null
+          data_constituicao: string | null
+          data_vencimento: string | null
+          id: string
+          numero_inscricao: string | null
+          numero_parcelamento: string | null
+          observacoes: string | null
+          orgao_origem: string | null
+          parcelas_pagas: number | null
+          processo: string | null
+          quantidade_parcelas: number | null
+          responsavel: string | null
+          situacao: string | null
+          tipo_debito: string | null
+          valor_juros: number | null
+          valor_multa: number | null
+          valor_principal: number | null
+          valor_total: number | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          consulta_cnd_id?: string | null
+          created_at?: string | null
+          data_constituicao?: string | null
+          data_vencimento?: string | null
+          id?: string
+          numero_inscricao?: string | null
+          numero_parcelamento?: string | null
+          observacoes?: string | null
+          orgao_origem?: string | null
+          parcelas_pagas?: number | null
+          processo?: string | null
+          quantidade_parcelas?: number | null
+          responsavel?: string | null
+          situacao?: string | null
+          tipo_debito?: string | null
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_principal?: number | null
+          valor_total?: number | null
+        }
+        Update: {
+          cliente_id?: string | null
+          consulta_cnd_id?: string | null
+          created_at?: string | null
+          data_constituicao?: string | null
+          data_vencimento?: string | null
+          id?: string
+          numero_inscricao?: string | null
+          numero_parcelamento?: string | null
+          observacoes?: string | null
+          orgao_origem?: string | null
+          parcelas_pagas?: number | null
+          processo?: string | null
+          quantidade_parcelas?: number | null
+          responsavel?: string | null
+          situacao?: string | null
+          tipo_debito?: string | null
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_principal?: number | null
+          valor_total?: number | null
         }
         Relationships: []
       }
@@ -367,6 +757,54 @@ export type Database = {
           status?: string | null
           tempo_execucao?: number | null
           workflow_n8n?: string | null
+        }
+        Relationships: []
+      }
+      logs_sistema: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          detalhes: Json | null
+          execution_id: string | null
+          id: string
+          ip_address: unknown
+          mensagem: string | null
+          responsavel: string | null
+          severidade: string | null
+          stack_trace: string | null
+          tipo_evento: string
+          user_agent: string | null
+          workflow_name: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          execution_id?: string | null
+          id?: string
+          ip_address?: unknown
+          mensagem?: string | null
+          responsavel?: string | null
+          severidade?: string | null
+          stack_trace?: string | null
+          tipo_evento: string
+          user_agent?: string | null
+          workflow_name?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          execution_id?: string | null
+          id?: string
+          ip_address?: unknown
+          mensagem?: string | null
+          responsavel?: string | null
+          severidade?: string | null
+          stack_trace?: string | null
+          tipo_evento?: string
+          user_agent?: string | null
+          workflow_name?: string | null
         }
         Relationships: []
       }
@@ -458,6 +896,7 @@ export type Database = {
           client_id: string | null
           concluida_em: string | null
           created_at: string
+          data_vencimento: string | null
           descricao: string | null
           id: string
           prioridade: string | null
@@ -468,12 +907,12 @@ export type Database = {
           titulo: string
           updated_at: string
           user_id: string
-          vencimento: string | null
         }
         Insert: {
           client_id?: string | null
           concluida_em?: string | null
           created_at?: string
+          data_vencimento?: string | null
           descricao?: string | null
           id?: string
           prioridade?: string | null
@@ -484,12 +923,12 @@ export type Database = {
           titulo: string
           updated_at?: string
           user_id: string
-          vencimento?: string | null
         }
         Update: {
           client_id?: string | null
           concluida_em?: string | null
           created_at?: string
+          data_vencimento?: string | null
           descricao?: string | null
           id?: string
           prioridade?: string | null
@@ -500,7 +939,6 @@ export type Database = {
           titulo?: string
           updated_at?: string
           user_id?: string
-          vencimento?: string | null
         }
         Relationships: [
           {
