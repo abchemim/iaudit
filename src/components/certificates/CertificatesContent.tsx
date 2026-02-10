@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClients } from "@/hooks/useClients";
+import { useRealtimeCND } from "@/hooks/useRealtimeCND";
 import { CndTable } from "./CndTable";
 import { CndStatsCards } from "./CndStatsCards";
 import { ConsultarCndDialog } from "./ConsultarCndDialog";
@@ -32,6 +33,7 @@ const CertificatesContent = () => {
   const [selectedClient, setSelectedClient] = useState<string | undefined>();
 
   const { data: clients } = useClients();
+  useRealtimeCND();
   const { data: cnds, isLoading, isRefetching } = useCndCertidoes({
     tipo: selectedTipo,
     status: selectedStatus,
