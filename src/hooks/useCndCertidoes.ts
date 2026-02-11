@@ -19,7 +19,7 @@ export interface CndCertidao {
   status: CndStatus;
   arquivo_url: string | null;
   arquivo_nome: string | null;
-  pdf_base64: string | null;
+  pdf_base64?: string | null;
   infosimples_query_id: string | null;
   infosimples_status: string | null;
   infosimples_creditos_usados: number | null;
@@ -77,7 +77,11 @@ export const useCndCertidoes = (filters?: CndFilters) => {
       let query = supabase
         .from("cnd_certidoes")
         .select(`
-          *,
+          id, client_id, tipo, orgao, numero_certidao, codigo_controle,
+          data_emissao, data_validade, situacao, status, arquivo_url, arquivo_nome,
+          infosimples_query_id, infosimples_status, infosimples_creditos_usados,
+          obtida_automaticamente, proximo_check, alertado, api_response, notes,
+          created_at, updated_at,
           clients(id, company_name, trade_name, cnpj)
         `)
         .order("updated_at", { ascending: false });
@@ -95,7 +99,7 @@ export const useCndCertidoes = (filters?: CndFilters) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as CndCertidao[];
+      return data as unknown as CndCertidao[];
     },
     enabled: !!user,
   });

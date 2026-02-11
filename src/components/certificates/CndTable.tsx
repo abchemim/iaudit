@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import { ptBR } from "date-fns/locale";
 import { RefreshCw, Trash2, Download, Eye, MoreHorizontal } from "lucide-react";
 import {
@@ -86,25 +87,33 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
     });
   };
 
-  const handleDownloadPdf = (cnd: CndCertidao) => {
+  const handleDownloadPdf = async (cnd: CndCertidao) => {
     if (cnd.arquivo_url) {
       window.open(cnd.arquivo_url, "_blank");
-    } else if (cnd.pdf_base64) {
-      // Create blob from base64 and download
-      const byteCharacters = atob(cnd.pdf_base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = cnd.arquivo_nome || `CND_${cnd.tipo}_${cnd.clients?.cnpj}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+      return;
     }
+    // Fetch pdf_base64 on demand
+    const { data, error } = await supabase
+      .from("cnd_certidoes")
+      .select("pdf_base64")
+      .eq("id", cnd.id)
+      .single();
+
+    if (error || !data?.pdf_base64) return;
+
+    const byteCharacters = atob(data.pdf_base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = cnd.arquivo_nome || `CND_${cnd.tipo}_${cnd.clients?.cnpj}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   if (isLoading) {
