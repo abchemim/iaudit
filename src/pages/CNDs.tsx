@@ -95,14 +95,19 @@ export default function CNDsPage() {
   }
 
   async function triggerManualConsult(tipo: string) {
+    const VALID_TIPOS = ['federal', 'estadual', 'fgts', 'municipal', 'trabalhista'];
+    if (!VALID_TIPOS.includes(tipo)) {
+      toast.error('Tipo de CND inválido');
+      return;
+    }
+
     try {
       toast.info(`Iniciando consulta manual de CND ${tipo}...`);
       
-      // Chamar webhook do N8N para consulta manual
       const response = await fetch(`${import.meta.env.VITE_N8N_WEBHOOK_URL}/iaudit-consulta-manual`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: tipo, manual: true })
+        body: JSON.stringify({ tipo, manual: true })
       });
 
       if (!response.ok) throw new Error('Falha na consulta');
