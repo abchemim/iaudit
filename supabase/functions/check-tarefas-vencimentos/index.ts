@@ -18,27 +18,21 @@ Deno.serve(async (req) => {
 
     console.log("Iniciando verificação de tarefas próximas do vencimento...");
 
-    // Get all users with their notification settings
     const { data: users, error: usersError } = await supabase
       .from("user_profiles")
       .select("user_id");
 
-    if (usersError) {
-      console.error("Erro ao buscar usuários:", usersError);
-      throw usersError;
-    }
+    if (usersError) throw usersError;
 
     let totalNotificacoesCriadas = 0;
 
     for (const user of users || []) {
-      // Get user notification settings
       const { data: settings } = await supabase
         .from("notification_settings")
         .select("tarefas_alert, dias_antecedencia_tarefas")
         .eq("user_id", user.user_id)
         .maybeSingle();
 
-      // Default to enabled with 3 days if no settings
       const tarefasAlertEnabled = settings?.tarefas_alert ?? true;
       const diasAntecedencia = settings?.dias_antecedencia_tarefas ?? 3;
 
@@ -47,24 +41,15 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Calculate the date range for alerts
       const hoje = new Date();
       const dataLimite = new Date();
       dataLimite.setDate(hoje.getDate() + diasAntecedencia);
 
-      // Get tasks that are:
-      // - Not completed
-      // - Have a due date within the alert window
-      // - Belong to this user
       const { data: tarefas, error: tarefasError } = await supabase
         .from("tarefas")
         .select(`
-          id,
-          titulo,
-          vencimento,
-          prioridade,
-          client_id,
-          clients(company_name, cnpj)
+          id, titulo, vencimento, prioridade, client_id,
+          clients:company_id(company_name, cnpj)
         `)
         .eq("user_id", user.user_id)
         .neq("status", "concluida")
@@ -80,7 +65,6 @@ Deno.serve(async (req) => {
       console.log(`Encontradas ${tarefas?.length || 0} tarefas próximas do vencimento para usuário ${user.user_id}`);
 
       for (const tarefa of tarefas || []) {
-        // Check if we already sent a notification for this task today
         const { data: existingNotification } = await supabase
           .from("notifications")
           .select("id")
@@ -90,28 +74,14 @@ Deno.serve(async (req) => {
           .gte("created_at", hoje.toISOString().split("T")[0])
           .maybeSingle();
 
-        if (existingNotification) {
-          console.log(`Notificação já enviada hoje para tarefa ${tarefa.id}`);
-          continue;
-        }
+        if (existingNotification) continue;
 
-        // Calculate days until due
         const vencimento = new Date(tarefa.vencimento);
-        const diffTime = vencimento.getTime() - hoje.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
-        let urgencia = "";
-        if (diffDays === 0) {
-          urgencia = "VENCE HOJE";
-        } else if (diffDays === 1) {
-          urgencia = "vence amanhã";
-        } else {
-          urgencia = `vence em ${diffDays} dias`;
-        }
+        const urgencia = diffDays === 0 ? "VENCE HOJE" : diffDays === 1 ? "vence amanhã" : `vence em ${diffDays} dias`;
+        const clienteNome = (tarefa.clients as any)?.company_name || "Sem cliente";
 
-        const clienteNome = tarefa.clients?.company_name || "Sem cliente";
-
-        // Create notification
         const { error: notifError } = await supabase
           .from("notifications")
           .insert({
@@ -126,7 +96,6 @@ Deno.serve(async (req) => {
         if (notifError) {
           console.error(`Erro ao criar notificação para tarefa ${tarefa.id}:`, notifError);
         } else {
-          console.log(`Notificação criada para tarefa ${tarefa.id}`);
           totalNotificacoesCriadas++;
         }
       }
@@ -140,19 +109,13 @@ Deno.serve(async (req) => {
         message: `Verificação concluída. ${totalNotificacoesCriadas} notificações criadas.`,
         notificacoes_criadas: totalNotificacoesCriadas,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro na verificação de tarefas:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
