@@ -310,7 +310,7 @@ Deno.serve(async (req) => {
 
     const { data: job, error: jobError } = await supabaseService
       .from("cnd_consultas_jobs")
-      .insert({ client_id, tipo, user_id: userId, status: "processing", progress: 0 })
+      .insert({ client_id, tipo, status: "processing", progress: 0 })
       .select()
       .single();
 
