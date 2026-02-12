@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -13,19 +12,19 @@ interface QueryRequest {
   cnpj: string;
 }
 
-const API_ENDPOINTS = {
+const API_ENDPOINTS: Record<string, string> = {
   federal: "https://api.infosimples.com/api/v2/consultas/receita-federal/pgfn/nova",
   estadual: "https://api.infosimples.com/api/v2/consultas/sefaz/pr/certidao-debitos",
   fgts: "https://api.infosimples.com/api/v2/consultas/caixa/regularidade",
 };
 
-const ORGAO_MAP = {
+const ORGAO_MAP: Record<string, string> = {
   federal: "receita_federal",
   fgts: "caixa",
   estadual: "sefaz",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -44,9 +43,9 @@ serve(async (req) => {
       throw new Error("Variáveis do Supabase não configuradas");
     }
 
-    // Authentication
+    // Authentication via getClaims
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ success: false, error: "Unauthorized" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
@@ -58,14 +57,15 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
-    if (userError || !user) {
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ success: false, error: "Token inválido" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
 
+    const userId = claimsData.claims.sub as string;
     const { client_id, certificate_type, cnpj }: QueryRequest = await req.json();
 
     if (!client_id || !certificate_type || !cnpj) {
@@ -75,8 +75,7 @@ serve(async (req) => {
       );
     }
 
-    const endpoint = API_ENDPOINTS[certificate_type];
-    if (!endpoint) {
+    if (!API_ENDPOINTS[certificate_type]) {
       return new Response(
         JSON.stringify({ success: false, error: `Tipo de certidão inválido: ${certificate_type}` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -97,7 +96,7 @@ serve(async (req) => {
       );
     }
 
-    if (client.user_id !== user.id) {
+    if (client.user_id !== userId) {
       return new Response(
         JSON.stringify({ success: false, error: "Acesso negado" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
@@ -113,23 +112,24 @@ serve(async (req) => {
       );
     }
 
-    console.log(`User ${user.id} querying ${certificate_type} for client ${client_id}`);
+    console.log(`User ${userId} querying ${certificate_type} for client ${client_id}`);
 
-    // Make API request to InfoSimples
-    const apiResponse = await fetch(endpoint, {
+    const apiResponse = await fetch(API_ENDPOINTS[certificate_type], {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token: INFOSIMPLES_TOKEN,
-        cnpj: cleanCnpj,
-        timeout: 300,
-      }),
+      body: JSON.stringify({ token: INFOSIMPLES_TOKEN, cnpj: cleanCnpj, timeout: 300 }),
     });
 
     const apiData = await apiResponse.json();
     console.log("API Response code:", apiData.code);
 
-    // Parse response
+    const parseDate = (dateStr: string | undefined): string | null => {
+      if (!dateStr) return null;
+      const parts = dateStr.split("/");
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return dateStr;
+    };
+
     let status = "pendente";
     let dataValidade: string | null = null;
     let dataEmissao: string | null = null;
@@ -140,18 +140,9 @@ serve(async (req) => {
 
     if (apiData.code === 200 && apiData.data_count > 0) {
       const data = apiData.data[0];
-
       situacao = data.situacao || data.situacao_regularidade;
       numeroCertidao = data.numero || data.numero_certidao || data.numero_crf;
       codigoControle = data.codigo_controle || data.codigo_verificacao;
-
-      const parseDate = (dateStr: string | undefined): string | null => {
-        if (!dateStr) return null;
-        const parts = dateStr.split("/");
-        if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        return dateStr;
-      };
-
       dataValidade = parseDate(data.data_validade || data.validade);
       dataEmissao = parseDate(data.data_emissao);
 
@@ -180,18 +171,14 @@ serve(async (req) => {
       situacao = apiData.message || "Erro na consulta";
     }
 
-    // Use service role for database operations
     const supabaseService = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check if CND already exists
     const { data: existingCnd } = await supabaseService
       .from("cnd_certidoes")
       .select("id")
       .eq("client_id", client_id)
       .eq("tipo", certificate_type)
       .maybeSingle();
-
-    let result;
 
     const cndData = {
       status,
@@ -206,6 +193,7 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
+    let result;
     if (existingCnd) {
       const { data, error } = await supabaseService
         .from("cnd_certidoes")
@@ -218,19 +206,13 @@ serve(async (req) => {
     } else {
       const { data, error } = await supabaseService
         .from("cnd_certidoes")
-        .insert({
-          client_id,
-          tipo: certificate_type,
-          orgao: ORGAO_MAP[certificate_type],
-          ...cndData,
-        })
+        .insert({ client_id, tipo: certificate_type, orgao: ORGAO_MAP[certificate_type], ...cndData })
         .select()
         .single();
       if (error) throw error;
       result = data;
     }
 
-    // Log credits
     await supabaseService.from("infosimples_creditos").insert({
       tipo_consulta: `cnd_${certificate_type}`,
       creditos_usados: creditosUsados,
@@ -238,14 +220,14 @@ serve(async (req) => {
       custo_estimado: certificate_type === "federal" ? 1.5 : certificate_type === "fgts" ? 1.0 : 1.2,
       sucesso: apiData.code === 200,
       query_id: apiData.query_id,
-      user_id: user.id,
+      user_id: userId,
     });
 
     return new Response(
       JSON.stringify({ success: true, certificate: result }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error:", error.message);
     return new Response(
       JSON.stringify({ success: false, error: "Erro interno ao processar a solicitação" }),

@@ -36,11 +36,11 @@ export default function CNDsPage() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCND, setSelectedCND] = useState<CND | null>(null);
+  const [consultingTipo, setConsultingTipo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCNDs();
     
-    // Subscription para atualizações em tempo real
     const subscription = supabase
       .channel('cnd_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cnd_certidoes' }, () => {
@@ -59,7 +59,8 @@ export default function CNDsPage() {
       let query = supabase
         .from('cnd_certidoes')
         .select(`
-          *,
+          id, client_id, tipo, orgao, numero_certidao, data_emissao, data_validade,
+          situacao, arquivo_url, arquivo_nome, status, alertado,
           clients:client_id (company_name, cnpj)
         `)
         .order('created_at', { ascending: false });
@@ -76,8 +77,7 @@ export default function CNDsPage() {
 
       if (error) throw error;
 
-      // Filtrar por termo de busca no cliente
-      let filteredData = (data || []) as CND[];
+      let filteredData = (data || []) as unknown as CND[];
       if (searchTerm) {
         filteredData = filteredData.filter(cnd => 
           cnd.clients?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,42 +102,57 @@ export default function CNDsPage() {
     }
 
     try {
+      setConsultingTipo(tipo);
       toast.info(`Iniciando consulta manual de CND ${tipo}...`);
-      
-      const response = await fetch(`${import.meta.env.VITE_N8N_WEBHOOK_URL}/iaudit-consulta-manual`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo, manual: true })
+
+      // Buscar primeiro cliente ativo para consulta
+      const { data: clients, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1);
+
+      if (clientError || !clients?.length) {
+        toast.error('Nenhum cliente ativo encontrado para consulta');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('consulta-cnd', {
+        body: { client_id: clients[0].id, tipo },
       });
 
-      if (!response.ok) throw new Error('Falha na consulta');
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro desconhecido');
 
       toast.success(`Consulta de CND ${tipo} iniciada! Os resultados aparecerão em breve.`);
-    } catch (error) {
-      toast.error('Erro ao iniciar consulta manual');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao iniciar consulta manual');
+    } finally {
+      setConsultingTipo(null);
     }
   }
 
   function getStatusBadge(status: string) {
-    const styles = {
+    const styles: Record<string, string> = {
       valida: 'bg-green-100 text-green-800',
       vencida: 'bg-red-100 text-red-800',
-      vencendo: 'bg-yellow-100 text-yellow-800'
+      vencendo: 'bg-yellow-100 text-yellow-800',
     };
     return <Badge className={styles[status] || 'bg-gray-100'}>{status?.toUpperCase()}</Badge>;
   }
 
   function getTipoIcon(tipo: string) {
-    const icons = {
+    const icons: Record<string, React.ReactNode> = {
       federal: <CheckCircle className="w-4 h-4 text-blue-500" />,
       estadual: <CheckCircle className="w-4 h-4 text-green-500" />,
       fgts: <CheckCircle className="w-4 h-4 text-orange-500" />,
-      municipal: <CheckCircle className="w-4 h-4 text-purple-500" />
+      municipal: <CheckCircle className="w-4 h-4 text-purple-500" />,
     };
     return icons[tipo] || <FileText className="w-4 h-4" />;
   }
 
-  function isVencendo(dataValidade: string) {
+  function isVencendo(dataValidade: string | null) {
+    if (!dataValidade) return false;
     const hoje = new Date();
     const validade = new Date(dataValidade);
     const diffDias = Math.ceil((validade.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
@@ -152,16 +167,16 @@ export default function CNDsPage() {
           <p className="text-muted-foreground">Gerenciamento automático de certidões fiscais</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => triggerManualConsult('federal')} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button onClick={() => triggerManualConsult('federal')} variant="outline" disabled={!!consultingTipo}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${consultingTipo === 'federal' ? 'animate-spin' : ''}`} />
             Consultar Federal
           </Button>
-          <Button onClick={() => triggerManualConsult('fgts')} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button onClick={() => triggerManualConsult('fgts')} variant="outline" disabled={!!consultingTipo}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${consultingTipo === 'fgts' ? 'animate-spin' : ''}`} />
             Consultar FGTS
           </Button>
-          <Button onClick={() => triggerManualConsult('estadual')}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button onClick={() => triggerManualConsult('estadual')} disabled={!!consultingTipo}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${consultingTipo === 'estadual' ? 'animate-spin' : ''}`} />
             Consultar Estadual
           </Button>
         </div>
@@ -294,11 +309,11 @@ export default function CNDsPage() {
                     </TableCell>
                     <TableCell>{cnd.numero_certidao || '-'}</TableCell>
                     <TableCell>
-                      {new Date(cnd.data_emissao).toLocaleDateString('pt-BR')}
+                      {cnd.data_emissao ? new Date(cnd.data_emissao).toLocaleDateString('pt-BR') : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {new Date(cnd.data_validade).toLocaleDateString('pt-BR')}
+                        {cnd.data_validade ? new Date(cnd.data_validade).toLocaleDateString('pt-BR') : '-'}
                         {isVencendo(cnd.data_validade) && (
                           <AlertCircle className="w-4 h-4 text-yellow-500" />
                         )}
@@ -311,7 +326,7 @@ export default function CNDsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(cnd.arquivo_url, '_blank')}
+                            onClick={() => window.open(cnd.arquivo_url!, '_blank')}
                           >
                             <Download className="w-4 h-4" />
                           </Button>
