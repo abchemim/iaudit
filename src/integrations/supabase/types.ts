@@ -93,7 +93,6 @@ export type Database = {
           numero_certidao: string | null
           obtida_automaticamente: boolean
           orgao: string
-          pdf_base64: string | null
           proximo_check: string | null
           situacao: string | null
           status: string
@@ -118,7 +117,6 @@ export type Database = {
           numero_certidao?: string | null
           obtida_automaticamente?: boolean
           orgao?: string
-          pdf_base64?: string | null
           proximo_check?: string | null
           situacao?: string | null
           status?: string
@@ -143,7 +141,6 @@ export type Database = {
           numero_certidao?: string | null
           obtida_automaticamente?: boolean
           orgao?: string
-          pdf_base64?: string | null
           proximo_check?: string | null
           situacao?: string | null
           status?: string
@@ -429,27 +426,42 @@ export type Database = {
           acao: string
           client_id: string | null
           created_at: string
+          dados_retorno: Json | null
           detalhes: string | null
           id: string
+          infosimples_creditos: number | null
+          infosimples_query_id: string | null
+          mensagem: string | null
           status: string
+          tempo_execucao: number | null
           tipo: string
         }
         Insert: {
           acao: string
           client_id?: string | null
           created_at?: string
+          dados_retorno?: Json | null
           detalhes?: string | null
           id?: string
+          infosimples_creditos?: number | null
+          infosimples_query_id?: string | null
+          mensagem?: string | null
           status?: string
-          tipo: string
+          tempo_execucao?: number | null
+          tipo?: string
         }
         Update: {
           acao?: string
           client_id?: string | null
           created_at?: string
+          dados_retorno?: Json | null
           detalhes?: string | null
           id?: string
+          infosimples_creditos?: number | null
+          infosimples_query_id?: string | null
+          mensagem?: string | null
           status?: string
+          tempo_execucao?: number | null
           tipo?: string
         }
         Relationships: [

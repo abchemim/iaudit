@@ -23,6 +23,51 @@ const ORGAO_MAP: Record<string, string> = {
   estadual: "sefaz",
 };
 
+async function uploadPdfToStorage(
+  supabaseService: ReturnType<typeof createClient>,
+  pdfBase64: string,
+  clientId: string,
+  tipo: string,
+  cnpj: string
+): Promise<{ url: string; nome: string } | null> {
+  try {
+    const cleanCnpj = cnpj.replace(/[^\d]/g, "");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `${cleanCnpj}/${tipo}/CND_${tipo}_${timestamp}.pdf`;
+
+    // Decode base64 to binary
+    const binaryString = atob(pdfBase64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const { error: uploadError } = await supabaseService.storage
+      .from("cnd-documentos")
+      .upload(fileName, bytes.buffer, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError.message);
+      return null;
+    }
+
+    const { data: publicUrl } = supabaseService.storage
+      .from("cnd-documentos")
+      .getPublicUrl(fileName);
+
+    return {
+      url: publicUrl.publicUrl,
+      nome: `CND_${tipo}_${cleanCnpj}_${timestamp}.pdf`,
+    };
+  } catch (error: any) {
+    console.error("PDF upload error:", error.message);
+    return null;
+  }
+}
+
 async function processConsulta(
   jobId: string,
   clientId: string,
@@ -143,6 +188,25 @@ async function processConsulta(
       .update({ progress: 75 })
       .eq("id", jobId);
 
+    // Upload PDF to storage if available
+    let arquivoUrl: string | null = null;
+    let arquivoNome: string | null = null;
+
+    if (pdfBase64) {
+      const uploadResult = await uploadPdfToStorage(
+        supabaseService,
+        pdfBase64,
+        clientId,
+        tipo,
+        cnpj
+      );
+      if (uploadResult) {
+        arquivoUrl = uploadResult.url;
+        arquivoNome = uploadResult.nome;
+        console.log(`PDF uploaded to storage: ${arquivoUrl}`);
+      }
+    }
+
     const proximoCheck = new Date();
     proximoCheck.setDate(proximoCheck.getDate() + 15);
 
@@ -160,7 +224,8 @@ async function processConsulta(
       codigo_controle: codigoControle,
       data_emissao: dataEmissao,
       data_validade: dataValidade,
-      pdf_base64: pdfBase64,
+      arquivo_url: arquivoUrl,
+      arquivo_nome: arquivoNome,
       infosimples_query_id: queryId,
       infosimples_status: apiData.code === 200 ? "concluida" : "erro",
       infosimples_creditos_usados: creditosUsados,
@@ -193,7 +258,7 @@ async function processConsulta(
     await supabaseService.from("infosimples_creditos").insert({
       tipo_consulta: `cnd_${tipo}`,
       creditos_usados: creditosUsados,
-      cnpj_consultado: cnpj.replace(/[^\d]/g, ""),
+      cnpj_consultado: cleanCnpj,
       custo_estimado: tipo === "federal" ? 1.5 : tipo === "fgts" ? 1.0 : 1.2,
       sucesso: apiData.code === 200,
       query_id: queryId,
@@ -202,6 +267,7 @@ async function processConsulta(
 
     const tempoExecucao = (Date.now() - startTime) / 1000;
     await supabaseService.from("logs_automacao").insert({
+      tipo: "cnd",
       client_id: clientId,
       acao: `consulta_cnd_${tipo}`,
       infosimples_query_id: queryId,
@@ -244,7 +310,6 @@ Deno.serve(async (req) => {
       throw new Error("Variáveis do Supabase não configuradas");
     }
 
-    // Authentication via getClaims
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -283,7 +348,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify client ownership
     const { data: client, error: clientError } = await supabaseAuth
       .from("clients")
       .select("id, user_id, cnpj, company_name, state")

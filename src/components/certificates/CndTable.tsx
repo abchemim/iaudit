@@ -92,28 +92,7 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
       window.open(cnd.arquivo_url, "_blank");
       return;
     }
-    // Fetch pdf_base64 on demand
-    const { data, error } = await supabase
-      .from("cnd_certidoes")
-      .select("pdf_base64")
-      .eq("id", cnd.id)
-      .single();
-
-    if (error || !data?.pdf_base64) return;
-
-    const byteCharacters = atob(data.pdf_base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = cnd.arquivo_nome || `CND_${cnd.tipo}_${cnd.clients?.cnpj}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    // No PDF available
   };
 
   if (isLoading) {
@@ -192,7 +171,7 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
                   {getStatusBadge(cnd.status)}
                 </TableCell>
                 <TableCell>
-                  {(cnd.arquivo_url || cnd.pdf_base64) ? (
+                  {cnd.arquivo_url ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -214,7 +193,7 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {(cnd.arquivo_url || cnd.pdf_base64) && (
+                      {cnd.arquivo_url && (
                         <DropdownMenuItem onClick={() => handleDownloadPdf(cnd)}>
                           <Download className="w-4 h-4 mr-2" />
                           Baixar PDF
