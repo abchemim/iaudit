@@ -6,7 +6,47 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Edge function para receber callbacks da InfoSimples
+async function uploadPdfToStorage(
+  supabase: ReturnType<typeof createClient>,
+  pdfBase64: string,
+  clientId: string,
+  tipo: string
+): Promise<{ url: string; nome: string } | null> {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `${clientId}/${tipo}/CND_${tipo}_${timestamp}.pdf`;
+
+    const binaryString = atob(pdfBase64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from("cnd-documentos")
+      .upload(fileName, bytes.buffer, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError.message);
+      return null;
+    }
+
+    const { data: publicUrl } = supabase.storage
+      .from("cnd-documentos")
+      .getPublicUrl(fileName);
+
+    return {
+      url: publicUrl.publicUrl,
+      nome: `CND_${tipo}_${timestamp}.pdf`,
+    };
+  } catch (error: any) {
+    console.error("PDF upload error:", error.message);
+    return null;
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -63,6 +103,7 @@ Deno.serve(async (req) => {
     if (!cnd) {
       console.log(`CND não encontrada para query_id: ${query_id}`);
       await supabase.from("logs_automacao").insert({
+        tipo: "webhook",
         acao: "callback_infosimples",
         status: "aviso",
         mensagem: `Callback recebido para query_id desconhecido: ${query_id}`,
@@ -123,6 +164,24 @@ Deno.serve(async (req) => {
       situacao = message || "Erro na consulta";
     }
 
+    // Upload PDF to storage if available
+    let arquivoUrl: string | null = null;
+    let arquivoNome: string | null = null;
+
+    if (pdfBase64) {
+      const uploadResult = await uploadPdfToStorage(
+        supabase,
+        pdfBase64,
+        cnd.client_id,
+        cnd.tipo
+      );
+      if (uploadResult) {
+        arquivoUrl = uploadResult.url;
+        arquivoNome = uploadResult.nome;
+        console.log(`PDF uploaded to storage: ${arquivoUrl}`);
+      }
+    }
+
     const { error: updateError } = await supabase
       .from("cnd_certidoes")
       .update({
@@ -132,7 +191,8 @@ Deno.serve(async (req) => {
         codigo_controle: codigoControle,
         data_emissao: dataEmissao,
         data_validade: dataValidade,
-        pdf_base64: pdfBase64,
+        arquivo_url: arquivoUrl,
+        arquivo_nome: arquivoNome,
         infosimples_status: code === 200 ? "concluida" : "erro",
         infosimples_creditos_usados: credits_used || 0,
         api_response: payload,
@@ -143,6 +203,7 @@ Deno.serve(async (req) => {
     if (updateError) throw updateError;
 
     await supabase.from("logs_automacao").insert({
+      tipo: "webhook",
       client_id: cnd.client_id,
       acao: "callback_infosimples",
       status: code === 200 ? "sucesso" : "erro",

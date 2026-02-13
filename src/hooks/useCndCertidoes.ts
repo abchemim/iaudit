@@ -19,7 +19,7 @@ export interface CndCertidao {
   status: CndStatus;
   arquivo_url: string | null;
   arquivo_nome: string | null;
-  pdf_base64?: string | null;
+  
   infosimples_query_id: string | null;
   infosimples_status: string | null;
   infosimples_creditos_usados: number | null;

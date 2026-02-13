@@ -24,6 +24,50 @@ const ORGAO_MAP: Record<string, string> = {
   estadual: "sefaz",
 };
 
+async function uploadPdfToStorage(
+  supabase: ReturnType<typeof createClient>,
+  pdfBase64: string,
+  clientId: string,
+  tipo: string,
+  cnpj: string
+): Promise<{ url: string; nome: string } | null> {
+  try {
+    const cleanCnpj = cnpj.replace(/[^\d]/g, "");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `${cleanCnpj}/${tipo}/CND_${tipo}_${timestamp}.pdf`;
+
+    const binaryString = atob(pdfBase64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from("cnd-documentos")
+      .upload(fileName, bytes.buffer, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError.message);
+      return null;
+    }
+
+    const { data: publicUrl } = supabase.storage
+      .from("cnd-documentos")
+      .getPublicUrl(fileName);
+
+    return {
+      url: publicUrl.publicUrl,
+      nome: `CND_${tipo}_${cleanCnpj}_${timestamp}.pdf`,
+    };
+  } catch (error: any) {
+    console.error("PDF upload error:", error.message);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -43,7 +87,6 @@ Deno.serve(async (req) => {
       throw new Error("Variáveis do Supabase não configuradas");
     }
 
-    // Authentication via getClaims
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -82,7 +125,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify client ownership
     const { data: client, error: clientError } = await supabaseAuth
       .from("clients")
       .select("id, user_id, cnpj")
@@ -136,6 +178,7 @@ Deno.serve(async (req) => {
     let numeroCertidao: string | null = null;
     let codigoControle: string | null = null;
     let situacao: string | null = null;
+    let pdfBase64: string | null = null;
     const creditosUsados = apiData.credits_used || 0;
 
     if (apiData.code === 200 && apiData.data_count > 0) {
@@ -143,6 +186,7 @@ Deno.serve(async (req) => {
       situacao = data.situacao || data.situacao_regularidade;
       numeroCertidao = data.numero || data.numero_certidao || data.numero_crf;
       codigoControle = data.codigo_controle || data.codigo_verificacao;
+      pdfBase64 = data.pdf;
       dataValidade = parseDate(data.data_validade || data.validade);
       dataEmissao = parseDate(data.data_emissao);
 
@@ -173,6 +217,25 @@ Deno.serve(async (req) => {
 
     const supabaseService = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Upload PDF to storage if available
+    let arquivoUrl: string | null = null;
+    let arquivoNome: string | null = null;
+
+    if (pdfBase64) {
+      const uploadResult = await uploadPdfToStorage(
+        supabaseService,
+        pdfBase64,
+        client_id,
+        certificate_type,
+        cnpj
+      );
+      if (uploadResult) {
+        arquivoUrl = uploadResult.url;
+        arquivoNome = uploadResult.nome;
+        console.log(`PDF uploaded to storage: ${arquivoUrl}`);
+      }
+    }
+
     const { data: existingCnd } = await supabaseService
       .from("cnd_certidoes")
       .select("id")
@@ -187,6 +250,8 @@ Deno.serve(async (req) => {
       codigo_controle: codigoControle,
       data_emissao: dataEmissao,
       data_validade: dataValidade,
+      arquivo_url: arquivoUrl,
+      arquivo_nome: arquivoNome,
       infosimples_status: apiData.code === 200 ? "concluida" : "erro",
       infosimples_creditos_usados: creditosUsados,
       api_response: apiData,
