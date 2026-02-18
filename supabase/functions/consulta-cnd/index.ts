@@ -77,7 +77,6 @@ async function downloadAndUploadSiteReceipt(
   try {
     const cleanCnpj = cnpj.replace(/[^\d]/g, "");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const fileName = `${cleanCnpj}/${tipo}/CND_${tipo}_${timestamp}.html`;
 
     const response = await fetch(siteReceiptUrl);
     if (!response.ok) {
@@ -85,12 +84,19 @@ async function downloadAndUploadSiteReceipt(
       return null;
     }
 
-    const htmlContent = await response.arrayBuffer();
+    // Detect if the file is a PDF based on URL extension or content-type header
+    const contentType = response.headers.get("content-type") || "";
+    const isPdf = siteReceiptUrl.toLowerCase().endsWith(".pdf") || contentType.includes("application/pdf");
+    const ext = isPdf ? "pdf" : "html";
+    const mimeType = isPdf ? "application/pdf" : "text/html";
+
+    const fileName = `${cleanCnpj}/${tipo}/CND_${tipo}_${timestamp}.${ext}`;
+    const fileContent = await response.arrayBuffer();
 
     const { error: uploadError } = await supabaseService.storage
       .from("cnd-documentos")
-      .upload(fileName, htmlContent, {
-        contentType: "text/html",
+      .upload(fileName, fileContent, {
+        contentType: mimeType,
         upsert: true,
       });
 
@@ -105,7 +111,7 @@ async function downloadAndUploadSiteReceipt(
 
     return {
       url: publicUrl.publicUrl,
-      nome: `CND_${tipo}_${cleanCnpj}_${timestamp}.html`,
+      nome: `CND_${tipo}_${cleanCnpj}_${timestamp}.${ext}`,
     };
   } catch (error: any) {
     console.error("Site receipt download/upload error:", error.message);
