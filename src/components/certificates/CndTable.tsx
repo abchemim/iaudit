@@ -89,10 +89,22 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
 
   const handleDownloadPdf = async (cnd: CndCertidao) => {
     if (cnd.arquivo_url) {
-      window.open(cnd.arquivo_url, "_blank");
+      try {
+        const response = await fetch(cnd.arquivo_url);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = cnd.arquivo_nome || `certidao_${cnd.tipo}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch {
+        window.open(cnd.arquivo_url, "_blank");
+      }
       return;
     }
-    // No PDF available
   };
 
   if (isLoading) {
