@@ -35,7 +35,6 @@ async function uploadPdfToStorage(
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const fileName = `${cleanCnpj}/${tipo}/CND_${tipo}_${timestamp}.pdf`;
 
-    // Decode base64 to binary
     const binaryString = atob(pdfBase64);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -64,6 +63,52 @@ async function uploadPdfToStorage(
     };
   } catch (error: any) {
     console.error("PDF upload error:", error.message);
+    return null;
+  }
+}
+
+async function downloadAndUploadSiteReceipt(
+  supabaseService: ReturnType<typeof createClient>,
+  siteReceiptUrl: string,
+  clientId: string,
+  tipo: string,
+  cnpj: string
+): Promise<{ url: string; nome: string } | null> {
+  try {
+    const cleanCnpj = cnpj.replace(/[^\d]/g, "");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `${cleanCnpj}/${tipo}/CND_${tipo}_${timestamp}.html`;
+
+    const response = await fetch(siteReceiptUrl);
+    if (!response.ok) {
+      console.error("Failed to download site_receipt:", response.status);
+      return null;
+    }
+
+    const htmlContent = await response.arrayBuffer();
+
+    const { error: uploadError } = await supabaseService.storage
+      .from("cnd-documentos")
+      .upload(fileName, htmlContent, {
+        contentType: "text/html",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError.message);
+      return null;
+    }
+
+    const { data: publicUrl } = supabaseService.storage
+      .from("cnd-documentos")
+      .getPublicUrl(fileName);
+
+    return {
+      url: publicUrl.publicUrl,
+      nome: `CND_${tipo}_${cleanCnpj}_${timestamp}.html`,
+    };
+  } catch (error: any) {
+    console.error("Site receipt download/upload error:", error.message);
     return null;
   }
 }
@@ -124,6 +169,7 @@ async function processConsulta(
     let codigoControle: string | null = null;
     let situacao: string | null = null;
     let pdfBase64: string | null = null;
+    let siteReceiptUrl: string | null = null;
     const creditosUsados = apiData.credits_used || 0;
     const queryId = apiData.query_id;
 
@@ -142,19 +188,22 @@ async function processConsulta(
         numeroCertidao = data.numero || data.certidao?.numero;
         codigoControle = data.codigo_controle || data.certidao?.codigo_controle;
         pdfBase64 = data.pdf || data.certidao?.pdf;
+        siteReceiptUrl = data.site_receipt || apiData.site_receipts?.[0] || null;
         dataValidade = parseDate(data.data_validade || data.certidao?.data_validade);
         dataEmissao = parseDate(data.data_emissao || data.certidao?.data_emissao);
       } else if (tipo === "fgts") {
         situacao = data.situacao_regularidade || data.situacao;
-        numeroCertidao = data.numero_crf || data.numero;
+        numeroCertidao = data.crf || data.numero_crf || data.numero;
         pdfBase64 = data.pdf;
-        dataValidade = parseDate(data.data_validade);
-        dataEmissao = parseDate(data.data_emissao);
+        siteReceiptUrl = data.site_receipt || apiData.site_receipts?.[0] || null;
+        dataValidade = parseDate(data.validade_fim_data || data.data_validade);
+        dataEmissao = parseDate(data.validade_inicio_data || data.data_emissao);
       } else if (tipo === "estadual") {
         situacao = data.situacao;
         numeroCertidao = data.numero_certidao || data.numero;
         codigoControle = data.codigo_verificacao;
         pdfBase64 = data.pdf;
+        siteReceiptUrl = data.site_receipt || apiData.site_receipts?.[0] || null;
         dataValidade = parseDate(data.validade);
       }
 
@@ -188,7 +237,7 @@ async function processConsulta(
       .update({ progress: 75 })
       .eq("id", jobId);
 
-    // Upload PDF to storage if available
+    // Upload file to storage: try PDF first, then site_receipt
     let arquivoUrl: string | null = null;
     let arquivoNome: string | null = null;
 
@@ -204,6 +253,20 @@ async function processConsulta(
         arquivoUrl = uploadResult.url;
         arquivoNome = uploadResult.nome;
         console.log(`PDF uploaded to storage: ${arquivoUrl}`);
+      }
+    } else if (siteReceiptUrl) {
+      console.log(`No PDF base64, downloading site_receipt: ${siteReceiptUrl}`);
+      const uploadResult = await downloadAndUploadSiteReceipt(
+        supabaseService,
+        siteReceiptUrl,
+        clientId,
+        tipo,
+        cnpj
+      );
+      if (uploadResult) {
+        arquivoUrl = uploadResult.url;
+        arquivoNome = uploadResult.nome;
+        console.log(`Site receipt uploaded to storage: ${arquivoUrl}`);
       }
     }
 
