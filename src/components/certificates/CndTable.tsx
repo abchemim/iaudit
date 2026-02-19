@@ -180,7 +180,14 @@ export const CndTable = ({ cnds, isLoading, search }: CndTableProps) => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {getStatusBadge(cnd.status)}
+                  <div>
+                    {getStatusBadge(cnd.status)}
+                    {cnd.status === "erro" && cnd.situacao && (
+                      <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                        {cnd.situacao}
+                      </p>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {cnd.arquivo_url ? (

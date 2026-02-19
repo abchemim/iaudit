@@ -233,9 +233,12 @@ async function processConsulta(
       }
     } else if (apiData.code === 600 || apiData.code === 601) {
       situacao = apiData.message || "Consulta em processamento";
+    } else if (apiData.code === 615) {
+      status = "erro";
+      situacao = "Órgão temporariamente indisponível. Tente novamente mais tarde.";
     } else {
       status = "erro";
-      situacao = apiData.message || "Erro na consulta";
+      situacao = apiData.code_message || apiData.message || "Erro na consulta";
     }
 
     await supabaseService
